@@ -1,0 +1,33 @@
+import { execa } from 'execa';
+import { logger } from './logger.js';
+
+const REQUIRED_TOOLS = ['ffmpeg', 'ffprobe', 'exiftool'] as const;
+
+/**
+ * Validate that all required tools are installed
+ */
+export async function validateTools(): Promise<void> {
+  const missing: string[] = [];
+
+  for (const tool of REQUIRED_TOOLS) {
+    try {
+      await execa('command', ['-v', tool]);
+    } catch {
+      missing.push(tool);
+    }
+  }
+
+  if (missing.length > 0) {
+    logger.error(`Error: Required tools not found: ${missing.join(', ')}`);
+    logger.info('');
+    logger.info('Install missing tools:');
+    if (missing.includes('ffmpeg') || missing.includes('ffprobe')) {
+      logger.info('  brew install ffmpeg');
+    }
+    if (missing.includes('exiftool')) {
+      logger.info('  brew install exiftool');
+    }
+    logger.info('');
+    process.exit(1);
+  }
+}
