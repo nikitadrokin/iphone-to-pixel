@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "description": "Convert iOS media files for Pixel compatibility",
   "type": "module",
-  "bin": "./dist/index.js",
   "files": [
     "dist"
   ],
@@ -29,6 +28,10 @@
   ],
   "author": "dna",
   "license": "MIT",
+  "bin": {
+    "iphone-to-pixel": "./dist/index.js",
+    "itp": "./dist/index.js"
+  },
   "dependencies": {
     "commander": "^14.0.2",
     "execa": "^9.6.1",
