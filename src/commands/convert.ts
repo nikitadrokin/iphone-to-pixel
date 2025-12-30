@@ -133,11 +133,11 @@ async function processIndividualFiles(filePaths: string[]): Promise<void> {
   await fs.mkdir(outDir, { recursive: true });
 
   logger.break();
-  logger.info('=========================================================');
+  logger.log('=========================================================');
   logger.info(`SOURCE:      ${regularFiles.length} file(s)`);
   logger.info(`DESTINATION: ${outDir}`);
   logger.info('MODE:        ARCHIVAL (Preserve HDR & HEIC)');
-  logger.info('=========================================================');
+  logger.log('=========================================================');
   logger.break();
 
   await validateTools();
@@ -148,12 +148,12 @@ async function processIndividualFiles(filePaths: string[]): Promise<void> {
   );
 
   logger.break();
-  logger.info('=========================================================');
+  logger.log('=========================================================');
   logger.success(
     `DONE. Processed ${processedCount} files, skipped ${skippedCount}.`,
   );
   logger.info(`Transfer this folder to your Pixel: ${outDir}`);
-  logger.info('=========================================================');
+  logger.log('=========================================================');
   logger.break();
 }
 
