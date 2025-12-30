@@ -4,10 +4,9 @@ Convert iOS media files (HEIC, HEVC, MOV) to Pixel-compatible formats while pres
 
 ## Features
 
-- **Lossless conversion**: Copies video streams without re-encoding (preserves HDR10, Dolby Vision)
-- **Smart audio handling**: Converts incompatible LPCM audio to AAC 320k
-- **Metadata preservation**: Fixes dates so Google Photos sorts by capture time
-- **HEIC support**: Copies HEIC images as-is (Pixel supports them natively)
+1. Lossless conversion for HEIC photos (Google Pixel 1 supports them)
+2. Near-lossless conversion from MOV and M4A videos to mp4
+3. Metadata preservation (iOS Photos sometimes sets time metadata weirdly)
 
 ## Installation
 
@@ -32,10 +31,7 @@ bun install -g iphone-to-pixel
 
 ```bash
 # Convert all files in a directory
-iphone-to-pixel convert ./MyPhotos
-
-# Default directory is "Part1"
-iphone-to-pixel convert
+itp convert ./MyPhotos
 ```
 
 Output will be created in `{directory}_Remuxed`
@@ -67,13 +63,6 @@ bun run build
 # Run locally
 bun run start convert ./test-folder
 ```
-
-## Technical Details
-
-- **Video codec**: Always copied (never re-encoded) to preserve HDR
-- **Audio codec**: Converted to AAC 320k for Android compatibility
-- **Container**: MP4 with `faststart` flag
-- **Metadata**: Syncs all date fields to capture time
 
 ## License
 
