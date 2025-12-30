@@ -1,4 +1,4 @@
-import * as kleur from 'kleur';
+import kleur from 'kleur';
 
 export const logger = {
   error(...args: unknown[]) {
