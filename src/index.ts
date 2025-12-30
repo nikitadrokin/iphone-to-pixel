@@ -7,7 +7,7 @@ process.on('SIGTERM', () => process.exit(0));
 
 async function main() {
   const program = new Command()
-    .name('iphone-to-pixel')
+    .name('itp')
     .description('Convert iOS media files for Pixel compatibility')
     .version('0.0.0');
 
