@@ -16,10 +16,9 @@ Convert iOS media files (HEIC, HEVC, MOV) to Pixel-compatible formats while pres
 ```bash
 # macOS
 brew install ffmpeg exiftool
-
-# Linux
-sudo apt install ffmpeg libimage-exiftool-perl
 ```
+
+> Note: This is currently only tested for macOS. I don't know if this will support Windows or Linux.
 
 ### Install CLI
 
