@@ -1,22 +1,49 @@
 import kleur from 'kleur';
 
+let mode: 'text' | 'json' = 'text';
+
 export const logger = {
+  setMode(newMode: 'text' | 'json') {
+    mode = newMode;
+  },
   error(...args: unknown[]) {
-    console.log(kleur.red(args.join(' ')));
+    if (mode === 'json') {
+      console.log(JSON.stringify({ type: 'error', message: args.join(' ') }));
+    } else {
+      console.log(kleur.red(args.join(' ')));
+    }
   },
   warn(...args: unknown[]) {
-    console.log(kleur.yellow(args.join(' ')));
+    if (mode === 'json') {
+      console.log(JSON.stringify({ type: 'warn', message: args.join(' ') }));
+    } else {
+      console.log(kleur.yellow(args.join(' ')));
+    }
   },
   info(...args: unknown[]) {
-    console.log(kleur.cyan(args.join(' ')));
+    if (mode === 'json') {
+      console.log(JSON.stringify({ type: 'info', message: args.join(' ') }));
+    } else {
+      console.log(kleur.cyan(args.join(' ')));
+    }
   },
   success(...args: unknown[]) {
-    console.log(kleur.green(args.join(' ')));
+    if (mode === 'json') {
+      console.log(JSON.stringify({ type: 'success', message: args.join(' ') }));
+    } else {
+      console.log(kleur.green(args.join(' ')));
+    }
   },
   log(...args: unknown[]) {
-    console.log(args.join(' '));
+    if (mode === 'json') {
+      console.log(JSON.stringify({ type: 'log', message: args.join(' ') }));
+    } else {
+      console.log(args.join(' '));
+    }
   },
   break() {
-    console.log('');
+    if (mode === 'text') {
+      console.log('');
+    }
   },
 };

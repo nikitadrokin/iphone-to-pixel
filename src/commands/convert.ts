@@ -9,6 +9,7 @@ import { validateTools } from '../utils/validation.js';
 
 const convertOptionsSchema = z.object({
   cwd: z.string(),
+  ui: z.boolean().optional(),
 });
 
 const IMAGE_EXTENSIONS = ['heic', 'heif', 'jpg', 'jpeg', 'png', 'gif', 'dng'];
@@ -23,11 +24,17 @@ export const convert = new Command()
     'the working directory. defaults to the current directory.',
     process.cwd(),
   )
+  .option('--ui', 'enable JSON output for UI integration')
   .action(async (paths: string[], opts) => {
     try {
       const options = convertOptionsSchema.parse({
         cwd: path.resolve(opts.cwd),
+        ui: opts.ui,
       });
+
+      if (options.ui) {
+        logger.setMode('json');
+      }
 
       const resolvedPaths = paths.map((p) => path.resolve(options.cwd, p));
 
