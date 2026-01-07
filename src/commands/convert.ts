@@ -117,16 +117,6 @@ async function processDirectory(dirPath: string): Promise<void> {
 }
 
 async function processIndividualFiles(filePaths: string[]): Promise<void> {
-  logger.break();
-  logger.warn(
-    '⚠️  NOTE: For better organization, please provide a directory instead of individual files.',
-  );
-  logger.break();
-
-  const firstFileDir = path.dirname(filePaths[0]);
-  const firstFileBaseName = path.basename(firstFileDir);
-  const outDir = path.join(firstFileDir, `${firstFileBaseName}_Remuxed`);
-
   const regularFiles = filePaths.filter((f) => {
     const ext = path.extname(f).toLowerCase().slice(1);
     return IMAGE_EXTENSIONS.includes(ext) || VIDEO_EXTENSIONS.includes(ext);
@@ -137,12 +127,10 @@ async function processIndividualFiles(filePaths: string[]): Promise<void> {
     process.exit(1);
   }
 
-  await fs.mkdir(outDir, { recursive: true });
-
   logger.break();
   logger.log('=========================================================');
   logger.info(`SOURCE:      ${regularFiles.length} file(s)`);
-  logger.info(`DESTINATION: ${outDir}`);
+  logger.info(`DESTINATION: In-place (Output files next to input files)`);
   logger.info('MODE:        ARCHIVAL (Preserve HDR & HEIC)');
   logger.log('=========================================================');
   logger.break();
@@ -151,7 +139,7 @@ async function processIndividualFiles(filePaths: string[]): Promise<void> {
 
   const { processedCount, skippedCount } = await processFiles(
     regularFiles,
-    outDir,
+    null,
   );
 
   logger.break();
@@ -159,14 +147,13 @@ async function processIndividualFiles(filePaths: string[]): Promise<void> {
   logger.success(
     `DONE. Processed ${processedCount} files, skipped ${skippedCount}.`,
   );
-  logger.info(`Transfer this folder to your Pixel: ${outDir}`);
   logger.log('=========================================================');
   logger.break();
 }
 
 async function processFiles(
   files: string[],
-  outDir: string,
+  outDir: string | null,
 ): Promise<{ processedCount: number; skippedCount: number }> {
   let processedCount = 0;
   let skippedCount = 0;
@@ -174,9 +161,19 @@ async function processFiles(
   for (const file of files) {
     const baseName = path.basename(file);
     const ext = path.extname(file).toLowerCase().slice(1);
+    // If outDir is null, use the file's own directory
+    const outputDirectory = outDir ?? path.dirname(file);
 
     if (IMAGE_EXTENSIONS.includes(ext)) {
-      const outFile = path.join(outDir, baseName);
+      const outFile = path.join(outputDirectory, baseName);
+
+      // In in-place mode, if input and output are same, we skip (or overwrite? usually we want to skip if it's the exact same file, but here we might be converting format? No, image processor copies bit-for-bit if it's HEIC, or maybe converts? logic says: "Copies files bit-for-bit" for HEIC.
+      // If outFile === file, we should definitely skip or warn.
+      if (outFile === file) {
+        // logger.warn(`Skipping ${baseName} (Output same as Input)`);
+        skippedCount++;
+        continue;
+      }
 
       try {
         await fs.access(outFile);
@@ -193,7 +190,12 @@ async function processFiles(
 
     if (VIDEO_EXTENSIONS.includes(ext)) {
       const stem = path.basename(file, path.extname(file));
-      const outFile = path.join(outDir, `${stem}.mp4`);
+      const outFile = path.join(outputDirectory, `${stem}.mp4`);
+
+      if (outFile === file) {
+        skippedCount++;
+        continue;
+      }
 
       try {
         await fs.access(outFile);

@@ -9,8 +9,11 @@ interface LogMessage {
   message: string;
 }
 
+const IMAGE_EXTENSIONS = ['heic', 'heif', 'jpg', 'jpeg', 'png', 'gif', 'dng'];
+const VIDEO_EXTENSIONS = ['mov', 'mp4', 'm4v'];
+
 function App() {
-  const [selectedDir, setSelectedDir] = useState<string | null>(null);
+  const [selectedPaths, setSelectedPaths] = useState<string[]>([]);
   const [isConverting, setIsConverting] = useState(false);
   const [logs, setLogs] = useState<LogMessage[]>([]);
   const logsEndRef = useRef<HTMLDivElement>(null);
@@ -23,17 +26,41 @@ function App() {
     scrollToBottom();
   }, [logs]);
 
+  async function handleSelectFiles() {
+    try {
+      const selected = await open({
+        directory: false,
+        multiple: true,
+        filters: [{
+           name: 'Media',
+           extensions: [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS] 
+        }],
+        title: "Select Photos/Videos"
+      });
+      
+      if (selected) {
+        // user can select multiple files
+        const paths = Array.isArray(selected) ? selected : [selected];
+        setSelectedPaths(paths);
+        setLogs([]); 
+      }
+    } catch (err) {
+      console.error(err);
+      setLogs(prev => [...prev, { type: 'error', message: `Failed to select files: ${String(err)}` }]);
+    }
+  }
+
   async function handleSelectDir() {
     try {
       const selected = await open({
         directory: true,
         multiple: false,
-        title: "Select Directory with Photos/Videos"
+        title: "Select Directory"
       });
       
       if (selected && typeof selected === 'string') {
-        setSelectedDir(selected);
-        setLogs([]); // Clear previous logs
+        setSelectedPaths([selected]);
+        setLogs([]); 
       }
     } catch (err) {
       console.error(err);
@@ -42,20 +69,23 @@ function App() {
   }
 
   async function handleConvert() {
-    if (!selectedDir) return;
+    if (selectedPaths.length === 0) return;
     
     setIsConverting(true);
     setLogs(prev => [...prev, { type: 'info', message: 'Starting conversion...' }]);
 
     try {
-      // Execute: bun run src/index.ts convert <path> --ui
-      const command = Command.create('bun', [
+      // Execute: bun run src/index.ts convert <path1> <path2> ... --ui
+      // We need to pass all selected paths as arguments
+      const args = [
         'run', 
-        'src/index.ts', 
+        '/Users/dna/Developer/Projects/iphone-to-pixel/src/index.ts', 
         'convert', 
-        selectedDir, 
+        ...selectedPaths, 
         '--ui'
-      ]);
+      ];
+
+      const command = Command.create('bun', args);
 
       command.stdout.on('data', line => {
         try {
@@ -101,13 +131,27 @@ function App() {
       <h1>iPhone to Pixel Converter</h1>
       
       <div className="card">
-        <button onClick={handleSelectDir} disabled={isConverting}>
-          {selectedDir ? "Change Directory" : "Select Directory"}
-        </button>
-        {selectedDir && <div className="path-display">Selected: <code>{selectedDir}</code></div>}
+        <div className="button-group">
+            <button onClick={handleSelectFiles} disabled={isConverting}>
+            Select Files
+            </button>
+            <button onClick={handleSelectDir} disabled={isConverting}>
+            Select Folder
+            </button>
+        </div>
+        
+        {selectedPaths.length > 0 && (
+            <div className="path-display">
+                <p>Selected {selectedPaths.length} item(s):</p>
+                <div className="path-list">
+                    {selectedPaths.slice(0, 5).map(p => <code key={p}>{p}</code>)}
+                    {selectedPaths.length > 5 && <span>...and {selectedPaths.length - 5} more</span>}
+                </div>
+            </div>
+        )}
       </div>
 
-      {selectedDir && (
+      {selectedPaths.length > 0 && (
         <div className="action-area">
           <button 
             className="primary" 

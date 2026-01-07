@@ -60,10 +60,25 @@ button.primary:hover {
   background-color: #535bf2;
 }
 
+.button-group {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+
 .path-display {
   margin-top: 1rem;
   word-break: break-all;
   color: #ccc;
+  text-align: left;
+}
+
+.path-list {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-top: 5px;
 }
 
 code {
