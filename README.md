@@ -1,69 +1,59 @@
-# iphone-to-pixel
+# iPhone to Pixel Converter
 
-Convert iOS media files (HEIC, HEVC, MOV) to Pixel-compatible formats while preserving HDR, metadata, and quality.
+A lightweight macOS utility to convert iOS media files (HEIC, MOV, HEVC) into formats compatible with Google Pixel 1 (and other devices), preserving original metadata and quality.
 
 ## Features
 
-1. Lossless conversion for HEIC photos (Google Pixel 1 supports them)
-2. Near-lossless conversion from MOV and M4A videos to mp4
-3. Metadata preservation (iOS Photos sometimes sets time metadata weirdly)
+- **Photos**: Converts HEIC to JPG (or copies if compatible) preserving EXIF data.
+- **Videos**: Remuxes MOV/HEVC to MP4 container without re-encoding video streams (preserves HDR), converts audio to AAC.
+- **Metadata**: Fixes creation dates to match original capture time.
+- **In-Place**: Converts individual files in the same folder.
+- **Batch**: Processes entire folders into a `_Remuxed` subdirectory.
 
-## Installation
+## Prerequisites
 
-### Prerequisites
+You need the following tools installed on your system for the converter to work (even the compiled app relies on these):
 
 ```bash
-# macOS
 brew install ffmpeg exiftool
 ```
 
-> Note: This is currently only tested for macOS. I don't know if this will support Windows or Linux.
+## Installation
 
-### Install CLI
+### From Source
 
-```bash
-npm install -g iphone-to-pixel
-# or
-bun install -g iphone-to-pixel
-```
+To build the app manually (e.g., to create a `.dmg` or `.app` file):
 
-## Usage
+1.  **Install Build Tools**:
+    Ensure you have [Bun](https://bun.sh) and [Rust](https://www.rust-lang.org/tools/install) installed.
+    ```bash
+    brew install bun rust
+    ```
 
-```bash
-# Convert all files in a directory
-itp convert ./MyPhotos
-```
+2.  **Clone & Install**:
+    ```bash
+    git clone https://github.com/yourusername/iphone-to-pixel.git
+    cd iphone-to-pixel
+    bun install
+    ```
 
-Output will be created in `{directory}_Remuxed`
+3.  **Build**:
+    This command compiles the internal CLI tool and bundles it into a native macOS application.
+    ```bash
+    bun run tauri build
+    ```
+    
+    The output (e.g., `.dmg`, `.app`) will be located in:
+    `src-tauri/target/release/bundle/dmg/`
 
-## What it does
+### Via Homebrew (Future)
 
-### Images (HEIC, JPG, PNG, GIF)
-
-- Copies files bit-for-bit
-- Fixes filesystem dates to match EXIF capture date
-
-### Videos (MOV, MP4, M4V)
-
-- Remuxes to MP4 container (no quality loss)
-- Preserves HEVC/H.264 video streams (keeps HDR)
-- Converts audio to AAC 320k if needed
-- Adds `faststart` flag for faster playback
-- Fixes all metadata dates
+*Coming soon.*
 
 ## Development
 
+To run the app in development mode with hot-reloading:
+
 ```bash
-# Install dependencies
-bun install
-
-# Build
-bun run build
-
-# Run locally
-bun run start convert ./test-folder
+bun run tauri dev
 ```
-
-## License
-
-MIT
