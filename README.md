@@ -46,9 +46,21 @@ To build the app manually (e.g., to create a `.dmg` or `.app` file):
     The output (e.g., `.dmg`, `.app`) will be located in:
     `src-tauri/target/release/bundle/dmg/`
 
-### Via Homebrew (Future)
+### Via Homebrew
 
-*Coming soon.*
+You can install the app easily using Homebrew:
+
+```bash
+brew install nikitadrokin/tap/iphone-to-pixel
+```
+
+#### "App is damaged" Error
+If you see a message saying *"iphone-to-pixel" is damaged and can't be opened*, this is due to macOS security requirements for non-App Store apps. To fix it, run:
+
+```bash
+xattr -cr /Applications/iphone-to-pixel.app
+```
+
 
 ## Development
 
