@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "iphone-to-pixel",
+  "productName": "iPhone to Pixel",
   "version": "0.0.3",
   "identifier": "me.nkdr.iphone-to-pixel",
   "build": {
