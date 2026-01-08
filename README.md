@@ -58,7 +58,7 @@ brew install nikitadrokin/tap/iphone-to-pixel
 If you see a message saying *"iphone-to-pixel" is damaged and can't be opened*, this is due to macOS security requirements for non-App Store apps. To fix it, run:
 
 ```bash
-xattr -cr /Applications/iphone-to-pixel.app
+xattr -cr '/Applications/iPhone to Pixel.app'
 ```
 
 
