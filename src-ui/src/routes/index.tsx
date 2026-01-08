@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { open } from "@tauri-apps/plugin-dialog";
 import { Command } from "@tauri-apps/plugin-shell";
-import { File, Folder, Play, Spinner } from "@phosphor-icons/react";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { toast } from "sonner";
+import { File, Folder, Play, Spinner, UploadSimple } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -16,11 +18,13 @@ interface LogMessage {
 
 const IMAGE_EXTENSIONS = ["heic", "heif", "jpg", "jpeg", "png", "gif", "dng"];
 const VIDEO_EXTENSIONS = ["mov", "mp4", "m4v"];
+const ALL_EXTENSIONS = [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS];
 
 function App() {
   const [selectedPaths, setSelectedPaths] = useState<string[]>([]);
   const [isConverting, setIsConverting] = useState(false);
   const [logs, setLogs] = useState<LogMessage[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
   const logsEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -30,6 +34,55 @@ function App() {
   useEffect(() => {
     scrollToBottom();
   }, [logs]);
+
+  // Global drag-and-drop listener
+  useEffect(() => {
+    const webview = getCurrentWebviewWindow();
+    
+    const unlisten = webview.onDragDropEvent((event) => {
+      const { type } = event.payload;
+      if (type === "over") {
+        setIsDragging(true);
+      } else if (type === "drop") {
+        setIsDragging(false);
+        const paths = event.payload.paths;
+        
+        // Filter paths to only include valid extensions (or directories)
+        const validPaths = paths.filter((p) => {
+          const ext = p.split(".").pop()?.toLowerCase() ?? "";
+          // Accept if it's a valid extension or has no extension (likely a directory)
+          return ALL_EXTENSIONS.includes(ext) || !p.includes(".");
+        });
+        
+        if (validPaths.length > 0) {
+          setSelectedPaths(validPaths);
+          setLogs([]);
+        } else if (paths.length > 0) {
+          // User dropped files but none were valid
+          const invalidExts = paths
+            .map((p) => p.split(".").pop()?.toLowerCase())
+            .filter((ext) => ext && !ALL_EXTENSIONS.includes(ext));
+          const uniqueExts = [...new Set(invalidExts)];
+          const toastId = toast.error(
+            `Unsupported file type${uniqueExts.length > 1 ? "s" : ""}: .${uniqueExts.join(", .")}`,
+            {
+              action: {
+                label: "Dismiss",
+                onClick: () => toast.dismiss(toastId),
+              },
+            }
+          );
+        }
+      } else {
+        // leave or cancel
+        setIsDragging(false);
+      }
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
 
   async function handleSelectFiles() {
     try {
@@ -139,7 +192,20 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-8 flex flex-col items-center gap-6">
+    <div className="min-h-screen bg-background text-foreground p-8 flex flex-col items-center gap-6 relative">
+      {/* Global dropzone overlay */}
+      {isDragging && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 p-12 border-2 border-dashed border-primary rounded-2xl bg-primary/10">
+            <UploadSimple size={64} className="text-primary" weight="bold" />
+            <p className="text-xl font-medium text-primary">Drop files or folder here</p>
+            <p className="text-sm text-muted-foreground">
+              Supports: {ALL_EXTENSIONS.join(", ")}
+            </p>
+          </div>
+        </div>
+      )}
+      
       <h1 className="text-3xl font-bold text-primary">iPhone to Pixel Converter</h1>
 
       <Card className="w-full max-w-2xl">
