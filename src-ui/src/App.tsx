@@ -101,7 +101,7 @@ function App() {
         setLogs(prev => [...prev, { type: 'error', message: line }]);
       });
 
-      const child = await command.spawn();
+      await command.spawn();
       
       command.on('close', data => {
         setIsConverting(false);
