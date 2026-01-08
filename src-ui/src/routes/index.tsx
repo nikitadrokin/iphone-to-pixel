@@ -147,14 +147,14 @@ function App() {
           <CardTitle className="text-center">Select Media</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <div className="flex gap-3 justify-center">
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Button onClick={handleSelectDir} disabled={isConverting}>
+              <Folder data-icon="inline-start" />
+              Select Folder
+            </Button>
             <Button variant="outline" onClick={handleSelectFiles} disabled={isConverting}>
               <File data-icon="inline-start" />
               Select Files
-            </Button>
-            <Button variant="outline" onClick={handleSelectDir} disabled={isConverting}>
-              <Folder data-icon="inline-start" />
-              Select Folder
             </Button>
           </div>
 
