@@ -75,17 +75,15 @@ function App() {
     setLogs(prev => [...prev, { type: 'info', message: 'Starting conversion...' }]);
 
     try {
-      // Execute: bun run src/index.ts convert <path1> <path2> ... --ui
-      // We need to pass all selected paths as arguments
+      // Execute sidecar: binaries/itp convert <path1> <path2> ... --ui
       const args = [
-        'run', 
-        '/Users/dna/Developer/Projects/iphone-to-pixel/src/index.ts', 
         'convert', 
         ...selectedPaths, 
         '--ui'
       ];
-
-      const command = Command.create('bun', args);
+      
+      console.log("Running sidecar with args:", args);
+      const command = Command.sidecar('binaries/itp', args);
 
       command.stdout.on('data', line => {
         try {

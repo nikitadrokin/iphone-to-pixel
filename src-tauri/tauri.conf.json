@@ -6,8 +6,8 @@
   "build": {
     "frontendDist": "../src-ui/dist",
     "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "cd src-ui && bun run dev",
-    "beforeBuildCommand": "cd src-ui && bun run build"
+    "beforeDevCommand": "bun run build:sidecar && cd src-ui && bun run dev",
+    "beforeBuildCommand": "bun run build:sidecar && cd src-ui && bun run build"
   },
   "app": {
     "windows": [
@@ -31,7 +31,11 @@
       "icons/128x128.png",
       "icons/128x128@2x.png",
       "icons/icon.icns",
+      "icons/icon.icns",
       "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/itp"
     ]
   }
 }

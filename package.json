@@ -15,6 +15,7 @@
   "scripts": {
     "dev": "tsup --watch",
     "build": "tsup",
+    "build:sidecar": "bun build ./src/index.ts --compile --outfile src-tauri/binaries/itp-aarch64-apple-darwin",
     "start": "bun run dist/index.js",
     "typecheck": "tsc --noEmit"
   },

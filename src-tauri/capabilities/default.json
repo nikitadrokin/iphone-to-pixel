@@ -21,6 +21,11 @@
           "name": "node",
           "cmd": "node",
           "args": true
+        },
+        {
+          "name": "binaries/itp",
+          "cmd": "sidecar",
+          "args": true
         }
       ]
     },
@@ -35,6 +40,11 @@
         {
           "name": "node",
           "cmd": "node",
+          "args": true
+        },
+        {
+          "name": "binaries/itp",
+          "cmd": "sidecar",
           "args": true
         }
       ]

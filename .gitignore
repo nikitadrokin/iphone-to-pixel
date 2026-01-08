@@ -3,3 +3,7 @@ dist/
 *.log
 .DS_Store
 *.tsbuildinfo
+*.bun-build
+
+# Binaries
+src-tauri/binaries/
