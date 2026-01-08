@@ -142,7 +142,7 @@ function App() {
     <div className="min-h-screen bg-background text-foreground p-8 flex flex-col items-center gap-6">
       <h1 className="text-3xl font-bold text-primary">iPhone to Pixel Converter</h1>
 
-      <Card className="w-full max-w-xl">
+      <Card className="w-full max-w-2xl">
         <CardHeader>
           <CardTitle className="text-center">Select Media</CardTitle>
         </CardHeader>
@@ -173,46 +173,52 @@ function App() {
               </div>
             </div>
           )}
+
+          {selectedPaths.length > 0 && (
+            <div className="flex justify-center pt-2">
+              <Button size="lg" onClick={handleConvert} disabled={isConverting}>
+                {isConverting ? (
+                  <>
+                    <Spinner className="animate-spin" data-icon="inline-start" />
+                    Converting...
+                  </>
+                ) : (
+                  <>
+                    <Play data-icon="inline-start" weight="fill" />
+                    Start Conversion
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {selectedPaths.length > 0 && (
-        <Button size="lg" onClick={handleConvert} disabled={isConverting}>
-          {isConverting ? (
-            <>
-              <Spinner className="animate-spin" data-icon="inline-start" />
-              Converting...
-            </>
-          ) : (
-            <>
-              <Play data-icon="inline-start" weight="fill" />
-              Start Conversion
-            </>
-          )}
-        </Button>
-      )}
-
-      <div className="w-full max-w-3xl h-80 bg-muted/30 border border-border rounded-lg p-4 overflow-y-auto font-mono text-sm">
-        {logs.length === 0 && (
-          <span className="text-muted-foreground">Logs will appear here...</span>
-        )}
-        {logs.map((log, i) => (
-          <div
-            key={i}
-            className={cn(
-              "mb-1",
-              log.type === "info" && "text-blue-500",
-              log.type === "success" && "text-emerald-500",
-              log.type === "error" && "text-red-500",
-              log.type === "warn" && "text-yellow-500",
-              log.type === "log" && "text-muted-foreground"
+      <Card className="w-full max-w-2xl">
+        <CardContent className="p-0">
+          <div className="h-72 p-4 overflow-y-auto font-mono text-sm">
+            {logs.length === 0 && (
+              <span className="text-muted-foreground">Logs will appear here...</span>
             )}
-          >
-            {log.message}
+            {logs.map((log, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "mb-1",
+                  log.type === "info" && "text-blue-500",
+                  log.type === "success" && "text-emerald-500",
+                  log.type === "error" && "text-red-500",
+                  log.type === "warn" && "text-yellow-500",
+                  log.type === "log" && "text-muted-foreground"
+                )}
+              >
+                {log.message}
+              </div>
+            ))}
+            <div ref={logsEndRef} />
           </div>
-        ))}
-        <div ref={logsEndRef} />
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
