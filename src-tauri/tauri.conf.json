@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "iphone-to-pixel",
-  "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "version": "0.0.3",
+  "identifier": "me.nkdr.iphone-to-pixel",
   "build": {
     "frontendDist": "../src-ui/dist",
     "devUrl": "http://localhost:5173",
