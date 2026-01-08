@@ -5,11 +5,15 @@ set -e
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 CYAN='\033[0;36m'
+YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TAURI_CONF="$SCRIPT_DIR/src-tauri/tauri.conf.json"
+PACKAGE_JSON="$SCRIPT_DIR/package.json"
+CARGO_TOML="$SCRIPT_DIR/src-tauri/Cargo.toml"
+INDEX_TS="$SCRIPT_DIR/src/index.ts"
 
 # Check for jq
 if ! command -v jq &> /dev/null; then
@@ -18,17 +22,50 @@ if ! command -v jq &> /dev/null; then
     exit 1
 fi
 
-# Read current version
+# Read current version from tauri config as source of truth
 CURRENT_VERSION=$(jq -r '.version' "$TAURI_CONF")
-echo -e "${CYAN}Current version:${NC} $CURRENT_VERSION"
 
 # Calculate next patch version
 IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
 NEXT_PATCH=$((patch + 1))
 NEXT_VERSION="$major.$minor.$NEXT_PATCH"
 
-# Build
-echo -e "${CYAN}Building release...${NC}"
+echo -e "Current version: ${YELLOW}$CURRENT_VERSION${NC}"
+echo -e "Next version:    ${GREEN}$NEXT_VERSION${NC}"
+echo ""
+
+# Prompt for version bump
+read -p "Bump version to $NEXT_VERSION before building? (y/n) " -n 1 -r
+echo ""
+echo ""
+
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    VERSION_TO_BUILD="$NEXT_VERSION"
+    echo -e "${CYAN}Updating version numbers to $NEXT_VERSION...${NC}"
+    
+    # 1. Update tauri.conf.json
+    sed -i '' "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEXT_VERSION\"/" "$TAURI_CONF"
+    echo "  ✓ Updated tauri.conf.json"
+    
+    # 2. Update package.json
+    sed -i '' "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$NEXT_VERSION\"/" "$PACKAGE_JSON"
+    echo "  ✓ Updated package.json"
+    
+    # 3. Update Cargo.toml
+    sed -i '' "s/version = \"$CURRENT_VERSION\"/version = \"$NEXT_VERSION\"/" "$CARGO_TOML"
+    echo "  ✓ Updated Cargo.toml"
+    
+    # 4. Update src/index.ts
+    sed -i '' "s/.version('$CURRENT_VERSION')/.version('$NEXT_VERSION')/" "$INDEX_TS"
+    echo "  ✓ Updated src/index.ts"
+    
+else
+    VERSION_TO_BUILD="$CURRENT_VERSION"
+    echo -e "${YELLOW}Keeping current version $CURRENT_VERSION${NC}"
+fi
+
+echo ""
+echo -e "${CYAN}Building release v$VERSION_TO_BUILD...${NC}"
 if ! bun run tauri build; then
     echo -e "${RED}Build failed!${NC}"
     exit 1
@@ -36,15 +73,13 @@ fi
 
 echo -e "${GREEN}Build complete!${NC}"
 
-# Find DMG
-DMG_PATH="$SCRIPT_DIR/src-tauri/target/release/bundle/dmg/iphone-to-pixel_${CURRENT_VERSION}_aarch64.dmg"
-if [[ ! -f "$DMG_PATH" ]]; then
-    # Try alternate naming pattern
-    DMG_PATH=$(find "$SCRIPT_DIR/src-tauri/target/release/bundle/dmg" -name "*.dmg" | head -1)
-fi
+# Find DMG - handle potential spaces in spaces in filename (Tauri 2 uses productName)
+# Pattern match to be safe
+DMG_DIR="$SCRIPT_DIR/src-tauri/target/release/bundle/dmg"
+DMG_PATH=$(find "$DMG_DIR" -name "*_${VERSION_TO_BUILD}_*.dmg" | head -1)
 
-if [[ ! -f "$DMG_PATH" ]]; then
-    echo -e "${RED}Error: DMG not found${NC}"
+if [[ -z "$DMG_PATH" || ! -f "$DMG_PATH" ]]; then
+    echo -e "${RED}Error: DMG not found for version $VERSION_TO_BUILD in $DMG_DIR${NC}"
     exit 1
 fi
 
@@ -56,7 +91,7 @@ CASK_FILE="$SCRIPT_DIR/../homebrew-tap/Casks/iphone-to-pixel.rb"
 if [[ -f "$CASK_FILE" ]]; then
     echo -e "${CYAN}Updating Homebrew cask...${NC}"
     # Update version
-    sed -i '' "s/version \".*\"/version \"$CURRENT_VERSION\"/" "$CASK_FILE"
+    sed -i '' "s/version \".*\"/version \"$VERSION_TO_BUILD\"/" "$CASK_FILE"
     # Update sha256
     sed -i '' "s/sha256 \".*\"/sha256 \"$SHA256\"/" "$CASK_FILE"
     echo -e "${GREEN}Cask file updated!${NC}"
@@ -64,23 +99,25 @@ else
     echo -e "${RED}Warning: Cask file not found at $CASK_FILE${NC}"
 fi
 
-# Output
+# Output results
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${GREEN}SHA256:${NC} $SHA256"
-echo -e "${GREEN}Version:${NC} $CURRENT_VERSION → $NEXT_VERSION"
+echo -e "${GREEN}SUCCESS! Release Ready${NC}"
+echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+echo -e "Version:  ${CYAN}$VERSION_TO_BUILD${NC}"
+echo -e "DMG Path: ${CYAN}$DMG_PATH${NC}"
+echo -e "SHA256:   ${CYAN}$SHA256${NC}"
 echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
 echo ""
-echo -e "${CYAN}To publish this release to GitHub:${NC}"
+echo -e "${CYAN}To publish this release:${NC}"
 echo ""
-echo "  1. Commit your version changes:"
-echo "     git add -A && git commit -m \"Release v$CURRENT_VERSION\""
+echo "  1. Commit changes:"
+echo "     git add -A && git commit -m \"Release v$VERSION_TO_BUILD\""
 echo ""
-echo "  2. Create and push a git tag:"
-echo "     git tag v$CURRENT_VERSION"
+echo "  2. Create tag:"
+echo "     git tag v$VERSION_TO_BUILD"
 echo "     git push origin main --tags"
 echo ""
-echo "  3. Create GitHub release and upload DMG:"
-echo "     gh release create v$CURRENT_VERSION \"$DMG_PATH\" --title \"v$CURRENT_VERSION\" --generate-notes"
+echo "  3. Create GitHub release:"
+echo "     gh release create v$VERSION_TO_BUILD \"$DMG_PATH\" --title \"v$VERSION_TO_BUILD\" --generate-notes"
 echo ""
-echo -e "${CYAN}Then update your Homebrew cask with the SHA256 above. The ruby file has been updated, please verify before committing.${NC}"
