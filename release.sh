@@ -51,7 +51,36 @@ fi
 # Calculate SHA256
 SHA256=$(shasum -a 256 "$DMG_PATH" | awk '{print $1}')
 
+# Update Homebrew cask file
+CASK_FILE="$SCRIPT_DIR/../homebrew-tap/Casks/iphone-to-pixel.rb"
+if [[ -f "$CASK_FILE" ]]; then
+    echo -e "${CYAN}Updating Homebrew cask...${NC}"
+    # Update version
+    sed -i '' "s/version \".*\"/version \"$CURRENT_VERSION\"/" "$CASK_FILE"
+    # Update sha256
+    sed -i '' "s/sha256 \".*\"/sha256 \"$SHA256\"/" "$CASK_FILE"
+    echo -e "${GREEN}Cask file updated!${NC}"
+else
+    echo -e "${RED}Warning: Cask file not found at $CASK_FILE${NC}"
+fi
+
 # Output
 echo ""
+echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}SHA256:${NC} $SHA256"
 echo -e "${GREEN}Version:${NC} $CURRENT_VERSION → $NEXT_VERSION"
+echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+echo ""
+echo -e "${CYAN}To publish this release to GitHub:${NC}"
+echo ""
+echo "  1. Commit your version changes:"
+echo "     git add -A && git commit -m \"Release v$CURRENT_VERSION\""
+echo ""
+echo "  2. Create and push a git tag:"
+echo "     git tag v$CURRENT_VERSION"
+echo "     git push origin main --tags"
+echo ""
+echo "  3. Create GitHub release and upload DMG:"
+echo "     gh release create v$CURRENT_VERSION \"$DMG_PATH\" --title \"v$CURRENT_VERSION\" --generate-notes"
+echo ""
+echo -e "${CYAN}Then update your Homebrew cask with the SHA256 above. The ruby file has been updated, please verify before committing.${NC}"
