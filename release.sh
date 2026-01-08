@@ -35,7 +35,7 @@ echo -e "Next version:    ${GREEN}$NEXT_VERSION${NC}"
 echo ""
 
 # Prompt for version bump
-read -p "Bump version to $NEXT_VERSION before building? (y/n) " -n 1 -r
+read -p "Bump version to $NEXT_VERSION before building? (y/N) " -n 1 -r
 echo ""
 echo ""
 
@@ -98,6 +98,9 @@ if [[ -f "$CASK_FILE" ]]; then
 else
     echo -e "${RED}Warning: Cask file not found at $CASK_FILE${NC}"
 fi
+
+# Cleanup filesystem (silently)
+find "$SCRIPT_DIR" -name "*.bun-build" -type f -delete
 
 # Output results
 echo ""
