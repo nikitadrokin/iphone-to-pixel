@@ -32,7 +32,7 @@ To build the app manually (e.g., to create a `.dmg` or `.app` file):
 
 2.  **Clone & Install**:
     ```bash
-    git clone https://github.com/yourusername/iphone-to-pixel.git
+    git clone https://github.com/nikitadrokin/iphone-to-pixel.git
     cd iphone-to-pixel
     bun install
     ```
