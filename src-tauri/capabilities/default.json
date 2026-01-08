@@ -24,7 +24,7 @@
         },
         {
           "name": "binaries/itp",
-          "cmd": "sidecar",
+          "sidecar": true,
           "args": true
         }
       ]
@@ -44,7 +44,7 @@
         },
         {
           "name": "binaries/itp",
-          "cmd": "sidecar",
+          "sidecar": true,
           "args": true
         }
       ]
