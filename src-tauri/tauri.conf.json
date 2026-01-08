@@ -4,7 +4,7 @@
   "version": "0.0.3",
   "identifier": "me.nkdr.iphone-to-pixel",
   "build": {
-    "frontendDist": "../src-ui/dist",
+    "frontendDist": "../src-ui/.output/public",
     "devUrl": "http://localhost:3000",
     "beforeDevCommand": "bun run build:sidecar && cd src-ui && bun run dev",
     "beforeBuildCommand": "bun run build:sidecar && cd src-ui && bun run build"
