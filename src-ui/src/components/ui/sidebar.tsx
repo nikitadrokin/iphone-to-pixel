@@ -166,7 +166,7 @@ function Sidebar({
       <div
         data-slot="sidebar"
         className={cn(
-          'bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col',
+          'bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col select-none',
           className,
         )}
         {...props}
@@ -503,6 +503,7 @@ function SidebarMenuButton({
   size = 'default',
   tooltip,
   className,
+  disabled = false,
   ...props
 }: useRender.ComponentProps<'button'> &
   React.ComponentProps<'button'> & {
@@ -522,6 +523,7 @@ function SidebarMenuButton({
     state: {
       slot: 'sidebar-menu-button',
       sidebar: 'menu-button',
+      disabled: disabled,
       size,
       active: isActive,
     },

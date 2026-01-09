@@ -20,12 +20,12 @@ import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar'
 import DropzoneOverlay from '@/components/dropzone-overlay'
 import LogViewer from '@/components/log-viewer'
 import PathList from '@/components/path-list'
 import ActionItem from '@/components/action-item'
-import AppSidebar from '@/components/app-sidebar'
 import { useDragDrop } from '@/hooks/use-drag-drop'
 import usePixel from '@/hooks/use-pixel'
 import {
@@ -33,12 +33,15 @@ import {
   IMAGE_EXTENSIONS,
   VIDEO_EXTENSIONS,
 } from '@/lib/constants'
+import { useIsMobile } from '@/hooks/use-mobile'
 
 export const Route = createFileRoute('/')({ component: App })
 
 function App() {
   const [selectedPaths, setSelectedPaths] = useState<string[]>([])
   const pixel = usePixel()
+  const { open: sidebarOpen } = useSidebar()
+  const isMobile = useIsMobile()
 
   const hasSelection = selectedPaths.length > 0
 
@@ -85,218 +88,175 @@ function App() {
   const clearSelection = useCallback(() => setSelectedPaths([]), [])
 
   return (
-    <SidebarProvider>
-      <AppSidebar
-        isPixelConnected={pixel.isConnected}
-        onCheckConnection={pixel.checkConnection}
-        isRunning={pixel.isRunning}
-      />
-      <SidebarInset className="flex flex-col">
-        <DropzoneOverlay isVisible={isDragging} extensions={ALL_EXTENSIONS} />
+    <>
+      <DropzoneOverlay isVisible={isDragging} extensions={ALL_EXTENSIONS} />
 
-        {/* Header with sidebar trigger */}
-        <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <div className="flex-1">
-            <h1 className="text-lg font-semibold">iPhone to Pixel Converter</h1>
-          </div>
-        </header>
+      {/* Header with sidebar trigger */}
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+        <SidebarTrigger className="-ml-1" />
+        <div className="flex-1">
+          <h1 className="text-lg font-semibold">Convert Media</h1>
+        </div>
+      </header>
 
-        {/* Main content */}
-        <main className="flex-1 overflow-auto p-4 md:p-6">
-          <div className="mx-auto max-w-3xl space-y-6">
-            {/* Connection Status */}
-            <ItemGroup>
-              <ActionItem
-                icon={
-                  <DeviceMobile
-                    size={24}
-                    weight={pixel.isConnected ? 'duotone' : 'regular'}
-                  />
-                }
-                iconClass={
-                  pixel.isConnected ? 'text-green-500' : 'text-muted-foreground'
-                }
-                title="Pixel Connection Status"
-                description={
-                  pixel.isConnected
-                    ? 'Connected via ADB'
-                    : 'No Pixel device found via ADB'
-                }
+      {/* Main content - Conversion workflow */}
+      <main className="flex-1 overflow-auto p-4 md:p-6">
+        <div className="mx-auto max-w-3xl space-y-6">
+          {/* Select Media */}
+          <ItemGroup>
+            <ActionItem
+              icon={<Folder size={24} weight="bold" />}
+              title="Select Media"
+              description={
+                hasSelection
+                  ? `${selectedPaths.length} item(s) selected`
+                  : 'Choose files or a folder to convert'
+              }
+            >
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={selectFolder}
+                disabled={pixel.isRunning || hasSelection}
               >
-                {pixel.isConnected ? (
-                  <CheckCircle
-                    size={20}
-                    className="text-green-500"
-                    weight="fill"
-                  />
-                ) : (
-                  <XCircle size={20} className="text-red-500" weight="fill" />
+                <Folder data-icon="inline-start" /> Folder
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={selectFiles}
+                disabled={pixel.isRunning || hasSelection}
+              >
+                <File data-icon="inline-start" /> Files
+              </Button>
+            </ActionItem>
+
+            <PathList paths={selectedPaths} onClear={clearSelection} />
+
+            {(isMobile || !sidebarOpen) && (
+              <>
+                {/* Convert */}
+                {hasSelection && (
+                  <ActionItem
+                    icon={
+                      pixel.isRunning ? (
+                        <Spinner size={24} className="animate-spin" />
+                      ) : (
+                        <Play size={24} weight="fill" />
+                      )
+                    }
+                    iconClass={
+                      pixel.isRunning ? 'text-amber-500' : 'text-primary'
+                    }
+                    title={pixel.isRunning ? 'Converting...' : 'Convert Media'}
+                    description={
+                      pixel.isRunning
+                        ? 'Processing your files...'
+                        : 'Convert selected media for Pixel compatibility'
+                    }
+                  >
+                    <Button
+                      onClick={() => pixel.convert(selectedPaths)}
+                      disabled={pixel.isRunning}
+                    >
+                      {pixel.isRunning ? 'Converting...' : 'Start'}
+                    </Button>
+                  </ActionItem>
                 )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={pixel.checkConnection}
-                  disabled={pixel.isRunning}
-                  className="h-8 w-8"
-                >
-                  <ArrowsClockwise
-                    className={pixel.isRunning ? 'animate-spin' : ''}
-                    size={16}
-                  />
-                  <span className="sr-only">Check Again</span>
-                </Button>
-              </ActionItem>
-            </ItemGroup>
 
-            {/* Main Actions */}
-            <ItemGroup>
-              {/* Select Media */}
-              <ActionItem
-                icon={<Folder size={24} weight="bold" />}
-                title="Select Media"
-                description={
-                  hasSelection
-                    ? `${selectedPaths.length} item(s) selected`
-                    : 'Choose files or a folder to convert'
-                }
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={selectFolder}
-                  disabled={pixel.isRunning || hasSelection}
-                >
-                  <Folder data-icon="inline-start" /> Folder
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={selectFiles}
-                  disabled={pixel.isRunning || hasSelection}
-                >
-                  <File data-icon="inline-start" /> Files
-                </Button>
-              </ActionItem>
-
-              <PathList paths={selectedPaths} onClear={clearSelection} />
-
-              {/* Convert */}
-              {hasSelection && (
+                {/* Push to Pixel */}
                 <ActionItem
-                  icon={
-                    pixel.isRunning ? (
-                      <Spinner size={24} className="animate-spin" />
-                    ) : (
-                      <Play size={24} weight="fill" />
-                    )
-                  }
+                  icon={<Export size={24} weight="bold" />}
                   iconClass={
-                    pixel.isRunning ? 'text-amber-500' : 'text-primary'
+                    pixel.isConnected
+                      ? 'text-green-500'
+                      : 'text-muted-foreground'
                   }
-                  title={pixel.isRunning ? 'Converting...' : 'Convert Media'}
+                  title="Push to Pixel"
                   description={
-                    pixel.isRunning
-                      ? 'Processing your files...'
-                      : 'Convert selected media for Pixel compatibility'
+                    pixel.isConnected
+                      ? 'Push files to /sdcard/DCIM/Camera'
+                      : 'Connect a Pixel device first'
                   }
+                  disabled={!pixel.isConnected}
                 >
                   <Button
-                    onClick={() => pixel.convert(selectedPaths)}
-                    disabled={pixel.isRunning}
+                    variant="outline"
+                    size="sm"
+                    onClick={pixel.pushFolder}
+                    disabled={pixel.isRunning || !pixel.isConnected}
                   >
-                    {pixel.isRunning ? 'Converting...' : 'Start'}
+                    <Folder data-icon="inline-start" /> Folder
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={pixel.pushFiles}
+                    disabled={pixel.isRunning || !pixel.isConnected}
+                  >
+                    <File data-icon="inline-start" /> Files
                   </Button>
                 </ActionItem>
-              )}
 
-              {/* Push to Pixel */}
-              <ActionItem
-                icon={<Export size={24} weight="bold" />}
-                iconClass={
-                  pixel.isConnected ? 'text-green-500' : 'text-muted-foreground'
-                }
-                title="Push to Pixel"
-                description={
-                  pixel.isConnected
-                    ? 'Push files to /sdcard/DCIM/Camera'
-                    : 'Connect a Pixel device first'
-                }
-                disabled={!pixel.isConnected}
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={pixel.pushFolder}
-                  disabled={pixel.isRunning || !pixel.isConnected}
+                {/* Pull from Pixel */}
+                <ActionItem
+                  icon={<DownloadSimple size={24} weight="bold" />}
+                  iconClass={
+                    pixel.isConnected
+                      ? 'text-blue-500'
+                      : 'text-muted-foreground'
+                  }
+                  title="Pull from Pixel"
+                  description={
+                    pixel.isConnected
+                      ? 'Download Camera folder to chosen directory'
+                      : 'Connect a Pixel device first'
+                  }
+                  disabled={!pixel.isConnected}
                 >
-                  <Folder data-icon="inline-start" /> Folder
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={pixel.pushFiles}
-                  disabled={pixel.isRunning || !pixel.isConnected}
-                >
-                  <File data-icon="inline-start" /> Files
-                </Button>
-              </ActionItem>
+                  <Button
+                    variant="outline"
+                    onClick={pixel.pull}
+                    disabled={pixel.isRunning || !pixel.isConnected}
+                  >
+                    Pull
+                  </Button>
+                </ActionItem>
 
-              {/* Pull from Pixel */}
-              <ActionItem
-                icon={<DownloadSimple size={24} weight="bold" />}
-                iconClass={
-                  pixel.isConnected ? 'text-blue-500' : 'text-muted-foreground'
-                }
-                title="Pull from Pixel"
-                description={
-                  pixel.isConnected
-                    ? 'Download Camera folder to chosen directory'
-                    : 'Connect a Pixel device first'
-                }
-                disabled={!pixel.isConnected}
-              >
-                <Button
-                  variant="outline"
-                  onClick={pixel.pull}
-                  disabled={pixel.isRunning || !pixel.isConnected}
+                {/* Launch Shell */}
+                <ActionItem
+                  icon={<Terminal size={24} weight="bold" />}
+                  iconClass={
+                    pixel.isConnected
+                      ? 'text-purple-500'
+                      : 'text-muted-foreground'
+                  }
+                  title="Launch Shell"
+                  description={
+                    pixel.isConnected
+                      ? 'Open an interactive ADB shell session'
+                      : 'Connect a Pixel device first'
+                  }
+                  disabled={!pixel.isConnected}
                 >
-                  Pull
-                </Button>
-              </ActionItem>
+                  <Button
+                    variant="outline"
+                    onClick={pixel.shell}
+                    // currently this isn't working as expected with "interactive" mode
+                    disabled={true}
+                    // disabled={pixel.isRunning || !pixel.isConnected}
+                  >
+                    Open
+                  </Button>
+                </ActionItem>
+              </>
+            )}
+          </ItemGroup>
 
-              {/* Launch Shell */}
-              <ActionItem
-                icon={<Terminal size={24} weight="bold" />}
-                iconClass={
-                  pixel.isConnected
-                    ? 'text-purple-500'
-                    : 'text-muted-foreground'
-                }
-                title="Launch Shell"
-                description={
-                  pixel.isConnected
-                    ? 'Open an interactive ADB shell session'
-                    : 'Connect a Pixel device first'
-                }
-                disabled={!pixel.isConnected}
-              >
-                <Button
-                  variant="outline"
-                  onClick={pixel.shell}
-                  // currently this isn't working as expected with "interactive" mode
-                  disabled={true}
-                  // disabled={pixel.isRunning || !pixel.isConnected}
-                >
-                  Open
-                </Button>
-              </ActionItem>
-            </ItemGroup>
-
-            <LogViewer logs={pixel.logs} logsEndRef={pixel.logsEndRef} />
-          </div>
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+          {/* Log Viewer */}
+          <LogViewer logs={pixel.logs} logsEndRef={pixel.logsEndRef} />
+        </div>
+      </main>
+    </>
   )
 }

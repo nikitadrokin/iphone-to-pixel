@@ -3,10 +3,12 @@ import { getVersion } from '@tauri-apps/api/app'
 import {
   GithubLogo,
   DeviceMobile,
-  Folder,
   Export,
   DownloadSimple,
   ArrowsClockwise,
+  Terminal,
+  Folder,
+  File,
 } from '@phosphor-icons/react'
 import {
   Sidebar,
@@ -22,17 +24,26 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 
 interface AppSidebarProps {
   isPixelConnected: boolean
   onCheckConnection: () => void
   isRunning: boolean
+  onPushFolder: () => void
+  onPushFiles: () => void
+  onPull: () => void
+  onShell: () => void
 }
 
 const AppSidebar: React.FC<AppSidebarProps> = ({
   isPixelConnected,
   onCheckConnection,
   isRunning,
+  onPushFolder,
+  onPushFiles,
+  onPull,
+  onShell,
 }) => {
   const [version, setVersion] = useState<string>('')
 
@@ -61,8 +72,9 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       <SidebarSeparator />
 
       <SidebarContent>
+        {/* Connection Status */}
         <SidebarGroup>
-          <SidebarGroupLabel>Connection</SidebarGroupLabel>
+          <SidebarGroupLabel>Pixel Device</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -80,7 +92,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                     )}
                   />
                   <span>
-                    {isPixelConnected ? 'Pixel Connected' : 'No Pixel Found'}
+                    {isPixelConnected ? 'Connected' : 'Not Connected'}
                   </span>
                   <ArrowsClockwise
                     className={cn(
@@ -94,35 +106,74 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Device Actions */}
         <SidebarGroup>
-          <SidebarGroupLabel>Quick Actions</SidebarGroupLabel>
+          <SidebarGroupLabel>Device Actions</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Select files or folders to convert">
-                  <Folder />
-                  <span>Convert Media</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {/* Push to Pixel */}
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  disabled={!isPixelConnected}
-                  tooltip="Push files to Pixel"
+                  disabled={!isPixelConnected || isRunning}
+                  data-disabled={!isPixelConnected || isRunning}
+                  tooltip={
+                    isPixelConnected
+                      ? 'Push files to /sdcard/DCIM/Camera'
+                      : 'Connect a Pixel device first'
+                  }
+                  className="data-[disabled=true]:hover:bg-inherit data-[disabled=true]:cursor-not-allowed data-[disabled=true]:text-muted-foreground"
                 >
-                  <Export
-                    className={cn(
-                      isPixelConnected
-                        ? 'text-green-500'
-                        : 'text-muted-foreground',
-                    )}
-                  />
-                  <span>Push to Pixel</span>
+                  <div className="flex items-center gap-2">
+                    <Export
+                      className={cn(
+                        isPixelConnected
+                          ? 'text-green-500'
+                          : 'text-muted-foreground',
+                      )}
+                    />
+                    <span>Push to Pixel</span>
+                  </div>
                 </SidebarMenuButton>
               </SidebarMenuItem>
+
+              {/* Push sub-actions */}
+              {isPixelConnected && (
+                <div className="ml-6 flex gap-1 py-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onPushFolder}
+                    disabled={isRunning}
+                    className="h-7 text-xs"
+                  >
+                    <Folder className="h-3 w-3" />
+                    Folder
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onPushFiles}
+                    disabled={isRunning}
+                    className="h-7 text-xs"
+                  >
+                    <File className="h-3 w-3" />
+                    Files
+                  </Button>
+                </div>
+              )}
+
+              {/* Pull from Pixel */}
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  disabled={!isPixelConnected}
-                  tooltip="Pull camera folder from Pixel"
+                  onClick={onPull}
+                  disabled={!isPixelConnected || isRunning}
+                  data-disabled={!isPixelConnected || isRunning}
+                  tooltip={
+                    isPixelConnected
+                      ? 'Download Camera folder to chosen directory'
+                      : 'Connect a Pixel device first'
+                  }
+                  className="data-[disabled=true]:hover:bg-inherit data-[disabled=true]:cursor-not-allowed data-[disabled=true]:text-muted-foreground"
                 >
                   <DownloadSimple
                     className={cn(
@@ -132,6 +183,30 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                     )}
                   />
                   <span>Pull from Pixel</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* Launch Shell */}
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={onShell}
+                  disabled={true} // Currently not working with interactive mode
+                  data-disabled={true}
+                  tooltip={
+                    isPixelConnected
+                      ? 'Open an interactive ADB shell session'
+                      : 'Connect a Pixel device first'
+                  }
+                  className="data-[disabled=true]:hover:bg-inherit data-[disabled=true]:cursor-not-allowed data-[disabled=true]:text-muted-foreground"
+                >
+                  <Terminal
+                    className={cn(
+                      isPixelConnected
+                        ? 'text-purple-500'
+                        : 'text-muted-foreground',
+                    )}
+                  />
+                  <span>Launch Shell</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
