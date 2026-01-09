@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { open } from '@tauri-apps/plugin-dialog'
 import {
@@ -15,20 +15,13 @@ import {
   DownloadSimple,
 } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
+import { ItemGroup } from '@/components/ui/item'
 import DropzoneOverlay from '@/components/dropzone-overlay'
 import LogViewer from '@/components/log-viewer'
 import PathList from '@/components/path-list'
-import {
-  Item,
-  ItemGroup,
-  ItemMedia,
-  ItemContent,
-  ItemTitle,
-  ItemDescription,
-  ItemActions,
-} from '@/components/ui/item'
+import ActionItem from '@/components/action-item'
 import { useDragDrop } from '@/hooks/use-drag-drop'
-import { useCommand } from '@/hooks/use-command'
+import usePixel from '@/hooks/use-pixel'
 import {
   ALL_EXTENSIONS,
   IMAGE_EXTENSIONS,
@@ -39,149 +32,51 @@ export const Route = createFileRoute('/')({ component: App })
 
 function App() {
   const [selectedPaths, setSelectedPaths] = useState<string[]>([])
-  const [isPixelConnected, setIsPixelConnected] = useState(false)
-
-  const { execute, isRunning, logs, clearLogs, logsEndRef } = useCommand({
-    sidecar: 'binaries/itp',
-  })
-
-  // Check ADB status on mount
-  useEffect(() => {
-    handleCheckAdb()
-  }, [])
+  const pixel = usePixel()
 
   const hasSelection = selectedPaths.length > 0
 
-  const handleClearSelection = useCallback(() => {
-    setSelectedPaths([])
-  }, [])
-
-  const handleDrop = useCallback(
-    (paths: string[]) => {
-      setSelectedPaths(paths)
-      clearLogs()
-    },
-    [clearLogs],
-  )
-
+  // Drag and drop
   const { isDragging } = useDragDrop({
     extensions: ALL_EXTENSIONS,
-    onDrop: handleDrop,
+    onDrop: (paths) => {
+      setSelectedPaths(paths)
+      pixel.clearLogs()
+    },
   })
 
-  async function handleSelectFiles() {
-    try {
-      const selected = await open({
-        directory: false,
-        multiple: true,
-        filters: [
-          {
-            name: 'Media',
-            extensions: [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS],
-          },
-        ],
-        title: 'Select Photos/Videos',
-      })
-
-      if (selected) {
-        const paths = Array.isArray(selected) ? selected : [selected]
-        setSelectedPaths(paths)
-        clearLogs()
-      }
-    } catch (err) {
-      console.error('Failed to select files:', err)
-    }
-  }
-
-  async function handleSelectDir() {
-    try {
-      const selected = await open({
-        directory: true,
-        multiple: false,
-        title: 'Select Directory',
-      })
-
-      if (selected && typeof selected === 'string') {
-        setSelectedPaths([selected])
-        clearLogs()
-      }
-    } catch (err) {
-      console.error('Failed to select directory:', err)
-    }
-  }
-
-  async function handleConvert() {
-    if (selectedPaths.length === 0) return
-    await execute(['convert', ...selectedPaths, '--ui'])
-  }
-
-  const handleCheckAdb = useCallback(async () => {
-    await execute(['check-adb'], {
-      onFinish: (code) => {
-        setIsPixelConnected(code === 0)
-      },
+  // File/folder selection for conversion
+  const selectFiles = useCallback(async () => {
+    const selected = await open({
+      directory: false,
+      multiple: true,
+      filters: [
+        {
+          name: 'Media',
+          extensions: [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS],
+        },
+      ],
+      title: 'Select Photos/Videos',
     })
-  }, [execute])
-
-  async function handlePushFiles() {
-    if (!isPixelConnected) return
-    try {
-      const selected = await open({
-        directory: false,
-        multiple: true,
-        filters: [
-          {
-            name: 'Media',
-            extensions: [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS],
-          },
-        ],
-        title: 'Select Files to Push to Pixel',
-      })
-      if (selected) {
-        const paths = Array.isArray(selected) ? selected : [selected]
-        await execute(['push-to-pixel', ...paths])
-      }
-    } catch (err) {
-      console.error('Failed to select files:', err)
+    if (selected) {
+      setSelectedPaths(Array.isArray(selected) ? selected : [selected])
+      pixel.clearLogs()
     }
-  }
+  }, [pixel])
 
-  async function handlePushFolder() {
-    if (!isPixelConnected) return
-    try {
-      const selected = await open({
-        directory: true,
-        multiple: false,
-        title: 'Select Folder to Push to Pixel',
-      })
-      if (selected && typeof selected === 'string') {
-        await execute(['push-to-pixel', selected])
-      }
-    } catch (err) {
-      console.error('Failed to select folder:', err)
+  const selectFolder = useCallback(async () => {
+    const selected = await open({
+      directory: true,
+      multiple: false,
+      title: 'Select Directory',
+    })
+    if (selected && typeof selected === 'string') {
+      setSelectedPaths([selected])
+      pixel.clearLogs()
     }
-  }
+  }, [pixel])
 
-  async function handlePullFromPixel() {
-    if (!isPixelConnected) return
-    try {
-      const destination = await open({
-        directory: true,
-        multiple: false,
-        title: 'Select Destination for Camera Files',
-      })
-      if (destination && typeof destination === 'string') {
-        await execute(['pull-from-pixel', destination])
-      }
-    } catch (err) {
-      console.error('Failed to select destination:', err)
-    }
-  }
-
-  async function handleShell() {
-    if (!isPixelConnected) return
-    await execute(['shell'])
-  }
+  const clearSelection = useCallback(() => setSelectedPaths([]), [])
 
   return (
     <div className="min-h-screen bg-background text-foreground p-8 flex flex-col items-center gap-6 relative">
@@ -191,214 +86,185 @@ function App() {
         iPhone to Pixel Converter
       </h1>
 
+      {/* Connection Status */}
       <ItemGroup className="w-full max-w-2xl">
-        <Item>
-          <ItemMedia
-            className={
-              isPixelConnected ? 'text-green-500' : 'text-muted-foreground'
-            }
-          >
+        <ActionItem
+          icon={
             <DeviceMobile
               size={24}
-              weight={isPixelConnected ? 'duotone' : 'regular'}
+              weight={pixel.isConnected ? 'duotone' : 'regular'}
             />
-          </ItemMedia>
-          <ItemContent>
-            <ItemTitle>Pixel Connection Status</ItemTitle>
-            <ItemDescription>
-              {isPixelConnected
-                ? 'Connected via ADB'
-                : 'No Pixel device found via ADB'}
-            </ItemDescription>
-          </ItemContent>
-          <ItemActions>
-            {isPixelConnected ? (
-              <CheckCircle size={20} className="text-green-500" weight="fill" />
-            ) : (
-              <XCircle size={20} className="text-red-500" weight="fill" />
-            )}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleCheckAdb}
-              disabled={isRunning}
-              className="h-8 w-8"
-            >
-              <ArrowsClockwise
-                className={isRunning ? 'animate-spin' : ''}
-                size={16}
-              />
-              <span className="sr-only">Check Again</span>
-            </Button>
-          </ItemActions>
-        </Item>
+          }
+          iconClass={
+            pixel.isConnected ? 'text-green-500' : 'text-muted-foreground'
+          }
+          title="Pixel Connection Status"
+          description={
+            pixel.isConnected
+              ? 'Connected via ADB'
+              : 'No Pixel device found via ADB'
+          }
+        >
+          {pixel.isConnected ? (
+            <CheckCircle size={20} className="text-green-500" weight="fill" />
+          ) : (
+            <XCircle size={20} className="text-red-500" weight="fill" />
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={pixel.checkConnection}
+            disabled={pixel.isRunning}
+            className="h-8 w-8"
+          >
+            <ArrowsClockwise
+              className={pixel.isRunning ? 'animate-spin' : ''}
+              size={16}
+            />
+            <span className="sr-only">Check Again</span>
+          </Button>
+        </ActionItem>
       </ItemGroup>
 
+      {/* Main Actions */}
       <ItemGroup className="w-full max-w-2xl">
         {/* Select Media */}
-        <Item>
-          <ItemMedia className="text-primary">
-            <Folder size={24} weight="bold" />
-          </ItemMedia>
-          <ItemContent>
-            <ItemTitle>Select Media</ItemTitle>
-            <ItemDescription>
-              {hasSelection
-                ? `${selectedPaths.length} item(s) selected`
-                : 'Choose files or a folder to convert'}
-            </ItemDescription>
-          </ItemContent>
-          <ItemActions>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSelectDir}
-              disabled={isRunning || hasSelection}
-            >
-              <Folder data-icon="inline-start" />
-              Folder
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSelectFiles}
-              disabled={isRunning || hasSelection}
-            >
-              <File data-icon="inline-start" />
-              Files
-            </Button>
-          </ItemActions>
-        </Item>
+        <ActionItem
+          icon={<Folder size={24} weight="bold" />}
+          title="Select Media"
+          description={
+            hasSelection
+              ? `${selectedPaths.length} item(s) selected`
+              : 'Choose files or a folder to convert'
+          }
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={selectFolder}
+            disabled={pixel.isRunning || hasSelection}
+          >
+            <Folder data-icon="inline-start" /> Folder
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={selectFiles}
+            disabled={pixel.isRunning || hasSelection}
+          >
+            <File data-icon="inline-start" /> Files
+          </Button>
+        </ActionItem>
 
-        <PathList paths={selectedPaths} onClear={handleClearSelection} />
+        <PathList paths={selectedPaths} onClear={clearSelection} />
 
-        {/* Start Conversion */}
+        {/* Convert */}
         {hasSelection && (
-          <Item>
-            <ItemMedia
-              className={isRunning ? 'text-amber-500' : 'text-primary'}
-            >
-              {isRunning ? (
+          <ActionItem
+            icon={
+              pixel.isRunning ? (
                 <Spinner size={24} className="animate-spin" />
               ) : (
                 <Play size={24} weight="fill" />
-              )}
-            </ItemMedia>
-            <ItemContent>
-              <ItemTitle>
-                {isRunning ? 'Converting...' : 'Convert Media'}
-              </ItemTitle>
-              <ItemDescription>
-                {isRunning
-                  ? 'Processing your files...'
-                  : 'Convert selected media for Pixel compatibility'}
-              </ItemDescription>
-            </ItemContent>
-            <ItemActions>
-              <Button onClick={handleConvert} disabled={isRunning}>
-                {isRunning ? 'Converting...' : 'Start'}
-              </Button>
-            </ItemActions>
-          </Item>
+              )
+            }
+            iconClass={pixel.isRunning ? 'text-amber-500' : 'text-primary'}
+            title={pixel.isRunning ? 'Converting...' : 'Convert Media'}
+            description={
+              pixel.isRunning
+                ? 'Processing your files...'
+                : 'Convert selected media for Pixel compatibility'
+            }
+          >
+            <Button
+              onClick={() => pixel.convert(selectedPaths)}
+              disabled={pixel.isRunning}
+            >
+              {pixel.isRunning ? 'Converting...' : 'Start'}
+            </Button>
+          </ActionItem>
         )}
 
         {/* Push to Pixel */}
-        <Item className={!isPixelConnected ? 'opacity-50' : ''}>
-          <ItemMedia
-            className={
-              isPixelConnected ? 'text-green-500' : 'text-muted-foreground'
-            }
+        <ActionItem
+          icon={<Export size={24} weight="bold" />}
+          iconClass={
+            pixel.isConnected ? 'text-green-500' : 'text-muted-foreground'
+          }
+          title="Push to Pixel"
+          description={
+            pixel.isConnected
+              ? 'Push files to /sdcard/DCIM/Camera'
+              : 'Connect a Pixel device first'
+          }
+          dimmed={!pixel.isConnected}
+        >
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={pixel.pushFolder}
+            disabled={pixel.isRunning || !pixel.isConnected}
           >
-            <Export size={24} weight="bold" />
-          </ItemMedia>
-          <ItemContent>
-            <ItemTitle>Push to Pixel</ItemTitle>
-            <ItemDescription>
-              {isPixelConnected
-                ? 'Push files to /sdcard/DCIM/Camera'
-                : 'Connect a Pixel device first'}
-            </ItemDescription>
-          </ItemContent>
-          <ItemActions>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePushFolder}
-              disabled={isRunning || !isPixelConnected}
-            >
-              <Folder data-icon="inline-start" />
-              Folder
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePushFiles}
-              disabled={isRunning || !isPixelConnected}
-            >
-              <File data-icon="inline-start" />
-              Files
-            </Button>
-          </ItemActions>
-        </Item>
+            <Folder data-icon="inline-start" /> Folder
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={pixel.pushFiles}
+            disabled={pixel.isRunning || !pixel.isConnected}
+          >
+            <File data-icon="inline-start" /> Files
+          </Button>
+        </ActionItem>
 
         {/* Pull from Pixel */}
-        <Item className={!isPixelConnected ? 'opacity-50' : ''}>
-          <ItemMedia
-            className={
-              isPixelConnected ? 'text-blue-500' : 'text-muted-foreground'
-            }
+        <ActionItem
+          icon={<DownloadSimple size={24} weight="bold" />}
+          iconClass={
+            pixel.isConnected ? 'text-blue-500' : 'text-muted-foreground'
+          }
+          title="Pull from Pixel"
+          description={
+            pixel.isConnected
+              ? 'Download Camera folder to chosen directory'
+              : 'Connect a Pixel device first'
+          }
+          dimmed={!pixel.isConnected}
+        >
+          <Button
+            variant="outline"
+            onClick={pixel.pull}
+            disabled={pixel.isRunning || !pixel.isConnected}
           >
-            <DownloadSimple size={24} weight="bold" />
-          </ItemMedia>
-          <ItemContent>
-            <ItemTitle>Pull from Pixel</ItemTitle>
-            <ItemDescription>
-              {isPixelConnected
-                ? 'Download Camera folder to current directory'
-                : 'Connect a Pixel device first'}
-            </ItemDescription>
-          </ItemContent>
-          <ItemActions>
-            <Button
-              variant="outline"
-              onClick={handlePullFromPixel}
-              disabled={isRunning || !isPixelConnected}
-            >
-              Pull
-            </Button>
-          </ItemActions>
-        </Item>
+            Pull
+          </Button>
+        </ActionItem>
 
         {/* Launch Shell */}
-        <Item className={!isPixelConnected ? 'opacity-50' : ''}>
-          <ItemMedia
-            className={
-              isPixelConnected ? 'text-purple-500' : 'text-muted-foreground'
-            }
+        <ActionItem
+          icon={<Terminal size={24} weight="bold" />}
+          iconClass={
+            pixel.isConnected ? 'text-purple-500' : 'text-muted-foreground'
+          }
+          title="Launch Shell"
+          description={
+            pixel.isConnected
+              ? 'Open an interactive ADB shell session'
+              : 'Connect a Pixel device first'
+          }
+          dimmed={!pixel.isConnected}
+        >
+          <Button
+            variant="outline"
+            onClick={pixel.shell}
+            disabled={pixel.isRunning || !pixel.isConnected}
           >
-            <Terminal size={24} weight="bold" />
-          </ItemMedia>
-          <ItemContent>
-            <ItemTitle>Launch Shell</ItemTitle>
-            <ItemDescription>
-              {isPixelConnected
-                ? 'Open an interactive ADB shell session'
-                : 'Connect a Pixel device first'}
-            </ItemDescription>
-          </ItemContent>
-          <ItemActions>
-            <Button
-              variant="outline"
-              onClick={handleShell}
-              disabled={isRunning || !isPixelConnected}
-            >
-              Open
-            </Button>
-          </ItemActions>
-        </Item>
+            Open
+          </Button>
+        </ActionItem>
       </ItemGroup>
 
-      <LogViewer logs={logs} logsEndRef={logsEndRef} />
+      <LogViewer logs={pixel.logs} logsEndRef={pixel.logsEndRef} />
     </div>
   )
 }
