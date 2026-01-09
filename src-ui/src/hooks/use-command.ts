@@ -9,7 +9,7 @@ interface UseCommandOptions {
 
 interface UseCommandResult {
     /** Execute the command with given args */
-    execute: (args: string[]) => Promise<void>;
+    execute: (args: string[], options?: { onFinish?: (code: number) => void }) => Promise<void>;
     /** Whether the command is currently running */
     isRunning: boolean;
     /** Log messages from stdout/stderr */
@@ -45,7 +45,7 @@ export function useCommand({ sidecar }: UseCommandOptions): UseCommandResult {
     }, []);
 
     const execute = useCallback(
-        async (args: string[]) => {
+        async (args: string[], options?: { onFinish?: (code: number) => void }) => {
             setIsRunning(true);
             addLog({ type: "info", message: "Starting process..." });
 
@@ -73,6 +73,9 @@ export function useCommand({ sidecar }: UseCommandOptions): UseCommandResult {
                         addLog({ type: "success", message: "Process finished successfully." });
                     } else {
                         addLog({ type: "error", message: `Process finished with code ${data.code}` });
+                    }
+                    if (options?.onFinish) {
+                        options.onFinish(data.code ?? -1);
                     }
                 });
 

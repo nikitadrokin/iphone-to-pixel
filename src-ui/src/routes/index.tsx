@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { open } from "@tauri-apps/plugin-dialog";
-import { File, Folder, Play, Spinner } from "@phosphor-icons/react";
+import { File, Folder, Play, Spinner, DeviceMobile, Export } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropzoneOverlay } from "@/components/DropzoneOverlay";
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/")({ component: App });
 
 function App() {
   const [selectedPaths, setSelectedPaths] = useState<string[]>([]);
+  const [isPixelConnected, setIsPixelConnected] = useState(false);
 
   const { execute, isRunning, logs, clearLogs, logsEndRef } = useCommand({
     sidecar: "binaries/itp",
@@ -82,6 +83,23 @@ function App() {
     await execute(["convert", ...selectedPaths, "--ui"]);
   }
 
+  async function handleCheckAdb() {
+    await execute(["check-adb"], {
+      onFinish: (code) => {
+        setIsPixelConnected(code === 0);
+      },
+    });
+  }
+
+  async function handlePushToPixel() {
+    if (selectedPaths.length === 0) return;
+    await execute(["push-to-pixel", ...selectedPaths], {
+      onFinish: (_) => {
+        // Optional: clear selection or show special success state?
+      }
+    });
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground p-8 flex flex-col items-center gap-6 relative">
       <DropzoneOverlay isVisible={isDragging} extensions={ALL_EXTENSIONS} />
@@ -107,20 +125,51 @@ function App() {
           <PathList paths={selectedPaths} onClear={handleClearSelection} />
 
           {selectedPaths.length > 0 && (
-            <div className="flex justify-center pt-2">
-              <Button size="lg" onClick={handleConvert} disabled={isRunning}>
-                {isRunning ? (
-                  <>
-                    <Spinner className="animate-spin" data-icon="inline-start" />
-                    Converting...
-                  </>
-                ) : (
-                  <>
-                    <Play data-icon="inline-start" weight="fill" />
-                    Start Conversion
-                  </>
-                )}
-              </Button>
+            <div className="flex flex-col gap-3 pt-2">
+              <div className="flex justify-center">
+                <Button size="lg" onClick={handleConvert} disabled={isRunning}>
+                  {isRunning ? (
+                    <>
+                      <Spinner className="animate-spin" data-icon="inline-start" />
+                      Converting...
+                    </>
+                  ) : (
+                    <>
+                      <Play data-icon="inline-start" weight="fill" />
+                      Start Conversion
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              <div className="border-t pt-4 mt-2">
+                <div className="flex flex-col items-center gap-2">
+                   <div className="flex gap-2">
+                      <Button 
+                        variant="secondary" 
+                        onClick={handleCheckAdb} 
+                        disabled={isRunning}
+                      >
+                        <DeviceMobile data-icon="inline-start" />
+                        Check for Pixel
+                      </Button>
+                      
+                      {isPixelConnected && (
+                        <Button 
+                          className="bg-green-600 hover:bg-green-700" 
+                          onClick={handlePushToPixel} 
+                          disabled={isRunning}
+                        >
+                          <Export data-icon="inline-start" />
+                          Push to Pixel
+                        </Button>
+                      )}
+                   </div>
+                   {isPixelConnected && (
+                     <p className="text-xs text-green-600 font-medium">Pixel Connected via ADB</p>
+                   )}
+                </div>
+              </div>
             </div>
           )}
         </CardContent>
