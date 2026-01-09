@@ -130,7 +130,18 @@ function App() {
 
   async function handlePullFromPixel() {
     if (!isPixelConnected) return
-    await execute(['pull-from-pixel'])
+    try {
+      const destination = await open({
+        directory: true,
+        multiple: false,
+        title: 'Select Destination for Camera Files',
+      })
+      if (destination && typeof destination === 'string') {
+        await execute(['pull-from-pixel', destination])
+      }
+    } catch (err) {
+      console.error('Failed to select destination:', err)
+    }
   }
 
   async function handleShell() {
