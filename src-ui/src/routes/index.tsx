@@ -197,7 +197,7 @@ function App() {
               ? 'Push files to /sdcard/DCIM/Camera'
               : 'Connect a Pixel device first'
           }
-          dimmed={!pixel.isConnected}
+          disabled={!pixel.isConnected}
         >
           <Button
             variant="outline"
@@ -229,7 +229,7 @@ function App() {
               ? 'Download Camera folder to chosen directory'
               : 'Connect a Pixel device first'
           }
-          dimmed={!pixel.isConnected}
+          disabled={!pixel.isConnected}
         >
           <Button
             variant="outline"
@@ -252,12 +252,14 @@ function App() {
               ? 'Open an interactive ADB shell session'
               : 'Connect a Pixel device first'
           }
-          dimmed={!pixel.isConnected}
+          disabled={!pixel.isConnected}
         >
           <Button
             variant="outline"
             onClick={pixel.shell}
-            disabled={pixel.isRunning || !pixel.isConnected}
+            // currently this isn't working as expected with "interactive" mode
+            disabled={true}
+            // disabled={pixel.isRunning || !pixel.isConnected}
           >
             Open
           </Button>

@@ -14,7 +14,7 @@ interface ActionItemProps {
   iconClass?: string
   title: string
   description: string
-  dimmed?: boolean
+  disabled?: boolean
   children: ReactNode
 }
 
@@ -23,11 +23,11 @@ const ActionItem: React.FC<ActionItemProps> = ({
   iconClass = 'text-primary',
   title,
   description,
-  dimmed = false,
+  disabled = false,
   children,
 }) => {
   return (
-    <Item className={dimmed ? 'opacity-50' : ''}>
+    <Item className={disabled ? 'opacity-50' : ''}>
       <ItemMedia className={iconClass}>{icon}</ItemMedia>
       <ItemContent>
         <ItemTitle>{title}</ItemTitle>
