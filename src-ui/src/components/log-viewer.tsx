@@ -16,7 +16,7 @@ const LogViewer: React.FC<LogViewerProps> = ({
 }) => {
   return (
     <Card className="w-full max-w-2xl p-0 relative">
-      <ScrollArea className="h-72 px-4 font-mono text-sm">
+      <ScrollArea className="h-72 p-4 font-mono text-sm">
         {logs.length === 0 && (
           <span className="text-muted-foreground">{emptyMessage}</span>
         )}

@@ -11,9 +11,10 @@ import {
   ArrowsClockwise,
   CheckCircle,
   XCircle,
+  Terminal,
+  DownloadSimple,
 } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import DropzoneOverlay from '@/components/dropzone-overlay'
 import LogViewer from '@/components/log-viewer'
 import PathList from '@/components/path-list'
@@ -123,12 +124,18 @@ function App() {
   }, [execute])
 
   async function handlePushToPixel() {
-    if (selectedPaths.length === 0) return
-    await execute(['push-to-pixel', ...selectedPaths], {
-      onFinish: (_) => {
-        // Optional: clear selection or show special success state?
-      },
-    })
+    if (selectedPaths.length === 0 || !isPixelConnected) return
+    await execute(['push-to-pixel', ...selectedPaths])
+  }
+
+  async function handlePullFromPixel() {
+    if (!isPixelConnected) return
+    await execute(['pull-from-pixel'])
+  }
+
+  async function handleShell() {
+    if (!isPixelConnected) return
+    await execute(['shell'])
   }
 
   return (
@@ -182,72 +189,164 @@ function App() {
         </Item>
       </ItemGroup>
 
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle className="text-center">Select Media</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex gap-3 justify-center flex-wrap">
+      <ItemGroup className="w-full max-w-2xl">
+        {/* Select Media */}
+        <Item>
+          <ItemMedia className="text-primary">
+            <Folder size={24} weight="bold" />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Select Media</ItemTitle>
+            <ItemDescription>
+              {hasSelection
+                ? `${selectedPaths.length} item(s) selected`
+                : 'Choose files or a folder to convert'}
+            </ItemDescription>
+          </ItemContent>
+          <ItemActions>
             <Button
+              variant="outline"
+              size="sm"
               onClick={handleSelectDir}
               disabled={isRunning || hasSelection}
             >
               <Folder data-icon="inline-start" />
-              Select Folder
+              Folder
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={handleSelectFiles}
               disabled={isRunning || hasSelection}
             >
               <File data-icon="inline-start" />
-              Select Files
+              Files
             </Button>
-          </div>
+          </ItemActions>
+        </Item>
 
-          <PathList paths={selectedPaths} onClear={handleClearSelection} />
+        <PathList paths={selectedPaths} onClear={handleClearSelection} />
 
-          {selectedPaths.length > 0 && (
-            <div className="flex flex-col gap-3 pt-2">
-              <div className="flex justify-center">
-                <Button size="lg" onClick={handleConvert} disabled={isRunning}>
-                  {isRunning ? (
-                    <>
-                      <Spinner
-                        className="animate-spin"
-                        data-icon="inline-start"
-                      />
-                      Converting...
-                    </>
-                  ) : (
-                    <>
-                      <Play data-icon="inline-start" weight="fill" />
-                      Start Conversion
-                    </>
-                  )}
-                </Button>
-              </div>
+        {/* Start Conversion */}
+        {hasSelection && (
+          <Item>
+            <ItemMedia
+              className={isRunning ? 'text-amber-500' : 'text-primary'}
+            >
+              {isRunning ? (
+                <Spinner size={24} className="animate-spin" />
+              ) : (
+                <Play size={24} weight="fill" />
+              )}
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>
+                {isRunning ? 'Converting...' : 'Convert Media'}
+              </ItemTitle>
+              <ItemDescription>
+                {isRunning
+                  ? 'Processing your files...'
+                  : 'Convert selected media for Pixel compatibility'}
+              </ItemDescription>
+            </ItemContent>
+            <ItemActions>
+              <Button onClick={handleConvert} disabled={isRunning}>
+                {isRunning ? 'Converting...' : 'Start'}
+              </Button>
+            </ItemActions>
+          </Item>
+        )}
 
-              <div className="border-t pt-4 mt-2">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="flex gap-2 justify-center min-h-[40px]">
-                    {isPixelConnected && (
-                      <Button
-                        className="bg-green-600 hover:bg-green-700"
-                        onClick={handlePushToPixel}
-                        disabled={isRunning}
-                      >
-                        <Export data-icon="inline-start" />
-                        Push to Pixel
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {/* Push to Pixel */}
+        <Item
+          className={!isPixelConnected || !hasSelection ? 'opacity-50' : ''}
+        >
+          <ItemMedia
+            className={
+              isPixelConnected && hasSelection
+                ? 'text-green-500'
+                : 'text-muted-foreground'
+            }
+          >
+            <Export size={24} weight="bold" />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Push to Pixel</ItemTitle>
+            <ItemDescription>
+              {!isPixelConnected
+                ? 'Connect a Pixel device first'
+                : !hasSelection
+                  ? 'Select media to push'
+                  : 'Push selected files to /sdcard/DCIM/Camera'}
+            </ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <Button
+              variant="outline"
+              onClick={handlePushToPixel}
+              disabled={isRunning || !isPixelConnected || !hasSelection}
+            >
+              Push
+            </Button>
+          </ItemActions>
+        </Item>
+
+        {/* Pull from Pixel */}
+        <Item className={!isPixelConnected ? 'opacity-50' : ''}>
+          <ItemMedia
+            className={
+              isPixelConnected ? 'text-blue-500' : 'text-muted-foreground'
+            }
+          >
+            <DownloadSimple size={24} weight="bold" />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Pull from Pixel</ItemTitle>
+            <ItemDescription>
+              {isPixelConnected
+                ? 'Download Camera folder to current directory'
+                : 'Connect a Pixel device first'}
+            </ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <Button
+              variant="outline"
+              onClick={handlePullFromPixel}
+              disabled={isRunning || !isPixelConnected}
+            >
+              Pull
+            </Button>
+          </ItemActions>
+        </Item>
+
+        {/* Launch Shell */}
+        <Item className={!isPixelConnected ? 'opacity-50' : ''}>
+          <ItemMedia
+            className={
+              isPixelConnected ? 'text-purple-500' : 'text-muted-foreground'
+            }
+          >
+            <Terminal size={24} weight="bold" />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Launch Shell</ItemTitle>
+            <ItemDescription>
+              {isPixelConnected
+                ? 'Open an interactive ADB shell session'
+                : 'Connect a Pixel device first'}
+            </ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <Button
+              variant="outline"
+              onClick={handleShell}
+              disabled={isRunning || !isPixelConnected}
+            >
+              Open
+            </Button>
+          </ItemActions>
+        </Item>
+      </ItemGroup>
 
       <LogViewer logs={logs} logsEndRef={logsEndRef} />
     </div>

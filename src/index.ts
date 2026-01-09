@@ -4,6 +4,8 @@ import { convert } from './commands/convert.js';
 import { randomize } from './commands/randomize.js';
 import { checkAdb } from './commands/check-adb.js';
 import { pushToPixel } from './commands/push-to-pixel.js';
+import { pullFromPixel } from './commands/pull-from-pixel.js';
+import { shell } from './commands/shell.js';
 
 // Fix for macOS sidecar process not having access to Homebrew paths
 if (process.platform === 'darwin') {
@@ -26,9 +28,9 @@ async function main() {
   program.addCommand(convert);
   program.addCommand(randomize);
   program.addCommand(checkAdb);
-  // program.addCommand(createPixelShellSession);
   program.addCommand(pushToPixel);
-  // program.addCommand(pullFromPixel);
+  program.addCommand(pullFromPixel);
+  program.addCommand(shell);
 
   program.parse();
 }
