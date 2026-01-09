@@ -1,12 +1,22 @@
-import { useState, useCallback, useEffect } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { open } from "@tauri-apps/plugin-dialog";
-import { File, Folder, Play, Spinner, DeviceMobile, Export, ArrowsClockwise, CheckCircle, XCircle } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DropzoneOverlay } from "@/components/DropzoneOverlay";
-import { LogViewer } from "@/components/LogViewer";
-import { PathList } from "@/components/PathList";
+import { useState, useCallback, useEffect } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
+import { open } from '@tauri-apps/plugin-dialog'
+import {
+  File,
+  Folder,
+  Play,
+  Spinner,
+  DeviceMobile,
+  Export,
+  ArrowsClockwise,
+  CheckCircle,
+  XCircle,
+} from '@phosphor-icons/react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { DropzoneOverlay } from '@/components/dropzone-overlay'
+import { LogViewer } from '@/components/LogViewer'
+import { PathList } from '@/components/PathList'
 import {
   Item,
   ItemGroup,
@@ -15,41 +25,48 @@ import {
   ItemTitle,
   ItemDescription,
   ItemActions,
-} from "@/components/ui/item";
-import { useDragDrop } from "@/hooks/use-drag-drop";
-import { useCommand } from "@/hooks/use-command";
-import { ALL_EXTENSIONS, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from "@/lib/constants";
+} from '@/components/ui/item'
+import { useDragDrop } from '@/hooks/use-drag-drop'
+import { useCommand } from '@/hooks/use-command'
+import {
+  ALL_EXTENSIONS,
+  IMAGE_EXTENSIONS,
+  VIDEO_EXTENSIONS,
+} from '@/lib/constants'
 
-export const Route = createFileRoute("/")({ component: App });
+export const Route = createFileRoute('/')({ component: App })
 
 function App() {
-  const [selectedPaths, setSelectedPaths] = useState<string[]>([]);
-  const [isPixelConnected, setIsPixelConnected] = useState(false);
+  const [selectedPaths, setSelectedPaths] = useState<string[]>([])
+  const [isPixelConnected, setIsPixelConnected] = useState(false)
 
   const { execute, isRunning, logs, clearLogs, logsEndRef } = useCommand({
-    sidecar: "binaries/itp",
-  });
+    sidecar: 'binaries/itp',
+  })
 
   // Check ADB status on mount
   useEffect(() => {
-    handleCheckAdb();
-  }, []);
+    handleCheckAdb()
+  }, [])
 
-  const hasSelection = selectedPaths.length > 0;
+  const hasSelection = selectedPaths.length > 0
 
   const handleClearSelection = useCallback(() => {
-    setSelectedPaths([]);
-  }, []);
+    setSelectedPaths([])
+  }, [])
 
-  const handleDrop = useCallback((paths: string[]) => {
-    setSelectedPaths(paths);
-    clearLogs();
-  }, [clearLogs]);
+  const handleDrop = useCallback(
+    (paths: string[]) => {
+      setSelectedPaths(paths)
+      clearLogs()
+    },
+    [clearLogs],
+  )
 
   const { isDragging } = useDragDrop({
     extensions: ALL_EXTENSIONS,
     onDrop: handleDrop,
-  });
+  })
 
   async function handleSelectFiles() {
     try {
@@ -58,20 +75,20 @@ function App() {
         multiple: true,
         filters: [
           {
-            name: "Media",
+            name: 'Media',
             extensions: [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS],
           },
         ],
-        title: "Select Photos/Videos",
-      });
+        title: 'Select Photos/Videos',
+      })
 
       if (selected) {
-        const paths = Array.isArray(selected) ? selected : [selected];
-        setSelectedPaths(paths);
-        clearLogs();
+        const paths = Array.isArray(selected) ? selected : [selected]
+        setSelectedPaths(paths)
+        clearLogs()
       }
     } catch (err) {
-      console.error("Failed to select files:", err);
+      console.error('Failed to select files:', err)
     }
   }
 
@@ -80,57 +97,66 @@ function App() {
       const selected = await open({
         directory: true,
         multiple: false,
-        title: "Select Directory",
-      });
+        title: 'Select Directory',
+      })
 
-      if (selected && typeof selected === "string") {
-        setSelectedPaths([selected]);
-        clearLogs();
+      if (selected && typeof selected === 'string') {
+        setSelectedPaths([selected])
+        clearLogs()
       }
     } catch (err) {
-      console.error("Failed to select directory:", err);
+      console.error('Failed to select directory:', err)
     }
   }
 
   async function handleConvert() {
-    if (selectedPaths.length === 0) return;
-    await execute(["convert", ...selectedPaths, "--ui"]);
+    if (selectedPaths.length === 0) return
+    await execute(['convert', ...selectedPaths, '--ui'])
   }
 
   const handleCheckAdb = useCallback(async () => {
-    await execute(["check-adb"], {
+    await execute(['check-adb'], {
       onFinish: (code) => {
-        setIsPixelConnected(code === 0);
+        setIsPixelConnected(code === 0)
       },
-    });
-  }, [execute]);
+    })
+  }, [execute])
 
   async function handlePushToPixel() {
-    if (selectedPaths.length === 0) return;
-    await execute(["push-to-pixel", ...selectedPaths], {
+    if (selectedPaths.length === 0) return
+    await execute(['push-to-pixel', ...selectedPaths], {
       onFinish: (_) => {
         // Optional: clear selection or show special success state?
-      }
-    });
+      },
+    })
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground p-8 flex flex-col items-center gap-6 relative">
       <DropzoneOverlay isVisible={isDragging} extensions={ALL_EXTENSIONS} />
 
-      <h1 className="text-3xl font-bold text-primary">iPhone to Pixel Converter</h1>
+      <h1 className="text-3xl font-bold text-primary">
+        iPhone to Pixel Converter
+      </h1>
 
       <ItemGroup className="w-full max-w-2xl">
         <Item>
-          <ItemMedia className={isPixelConnected ? "text-green-500" : "text-muted-foreground"}>
-            <DeviceMobile size={24} weight={isPixelConnected ? "duotone" : "regular"} />
+          <ItemMedia
+            className={
+              isPixelConnected ? 'text-green-500' : 'text-muted-foreground'
+            }
+          >
+            <DeviceMobile
+              size={24}
+              weight={isPixelConnected ? 'duotone' : 'regular'}
+            />
           </ItemMedia>
           <ItemContent>
             <ItemTitle>Pixel Connection Status</ItemTitle>
             <ItemDescription>
-              {isPixelConnected 
-                ? "Device connected and ready for transfer" 
-                : "No Pixel device found via ADB"}
+              {isPixelConnected
+                ? 'Connected via ADB'
+                : 'No Pixel device found via ADB'}
             </ItemDescription>
           </ItemContent>
           <ItemActions>
@@ -139,16 +165,16 @@ function App() {
             ) : (
               <XCircle size={20} className="text-red-500" weight="fill" />
             )}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handleCheckAdb} 
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCheckAdb}
               disabled={isRunning}
               className="h-8 w-8"
             >
-              <ArrowsClockwise 
-                className={isRunning ? "animate-spin" : ""} 
-                size={16} 
+              <ArrowsClockwise
+                className={isRunning ? 'animate-spin' : ''}
+                size={16}
               />
               <span className="sr-only">Check Again</span>
             </Button>
@@ -162,11 +188,18 @@ function App() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex gap-3 justify-center flex-wrap">
-            <Button onClick={handleSelectDir} disabled={isRunning || hasSelection}>
+            <Button
+              onClick={handleSelectDir}
+              disabled={isRunning || hasSelection}
+            >
               <Folder data-icon="inline-start" />
               Select Folder
             </Button>
-            <Button variant="outline" onClick={handleSelectFiles} disabled={isRunning || hasSelection}>
+            <Button
+              variant="outline"
+              onClick={handleSelectFiles}
+              disabled={isRunning || hasSelection}
+            >
               <File data-icon="inline-start" />
               Select Files
             </Button>
@@ -180,7 +213,10 @@ function App() {
                 <Button size="lg" onClick={handleConvert} disabled={isRunning}>
                   {isRunning ? (
                     <>
-                      <Spinner className="animate-spin" data-icon="inline-start" />
+                      <Spinner
+                        className="animate-spin"
+                        data-icon="inline-start"
+                      />
                       Converting...
                     </>
                   ) : (
@@ -194,18 +230,18 @@ function App() {
 
               <div className="border-t pt-4 mt-2">
                 <div className="flex flex-col items-center gap-2">
-                   <div className="flex gap-2 justify-center min-h-[40px]">
-                      {isPixelConnected && (
-                        <Button 
-                          className="bg-green-600 hover:bg-green-700" 
-                          onClick={handlePushToPixel} 
-                          disabled={isRunning}
-                        >
-                          <Export data-icon="inline-start" />
-                          Push to Pixel
-                        </Button>
-                      )}
-                   </div>
+                  <div className="flex gap-2 justify-center min-h-[40px]">
+                    {isPixelConnected && (
+                      <Button
+                        className="bg-green-600 hover:bg-green-700"
+                        onClick={handlePushToPixel}
+                        disabled={isRunning}
+                      >
+                        <Export data-icon="inline-start" />
+                        Push to Pixel
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -215,5 +251,5 @@ function App() {
 
       <LogViewer logs={logs} logsEndRef={logsEndRef} />
     </div>
-  );
+  )
 }
