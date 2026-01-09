@@ -1,12 +1,21 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { open } from "@tauri-apps/plugin-dialog";
-import { File, Folder, Play, Spinner, DeviceMobile, Export } from "@phosphor-icons/react";
+import { File, Folder, Play, Spinner, DeviceMobile, Export, ArrowsClockwise, CheckCircle, XCircle } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropzoneOverlay } from "@/components/DropzoneOverlay";
 import { LogViewer } from "@/components/LogViewer";
 import { PathList } from "@/components/PathList";
+import {
+  Item,
+  ItemGroup,
+  ItemMedia,
+  ItemContent,
+  ItemTitle,
+  ItemDescription,
+  ItemActions,
+} from "@/components/ui/item";
 import { useDragDrop } from "@/hooks/use-drag-drop";
 import { useCommand } from "@/hooks/use-command";
 import { ALL_EXTENSIONS, IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from "@/lib/constants";
@@ -20,6 +29,11 @@ function App() {
   const { execute, isRunning, logs, clearLogs, logsEndRef } = useCommand({
     sidecar: "binaries/itp",
   });
+
+  // Check ADB status on mount
+  useEffect(() => {
+    handleCheckAdb();
+  }, []);
 
   const hasSelection = selectedPaths.length > 0;
 
@@ -83,13 +97,13 @@ function App() {
     await execute(["convert", ...selectedPaths, "--ui"]);
   }
 
-  async function handleCheckAdb() {
+  const handleCheckAdb = useCallback(async () => {
     await execute(["check-adb"], {
       onFinish: (code) => {
         setIsPixelConnected(code === 0);
       },
     });
-  }
+  }, [execute]);
 
   async function handlePushToPixel() {
     if (selectedPaths.length === 0) return;
@@ -105,6 +119,42 @@ function App() {
       <DropzoneOverlay isVisible={isDragging} extensions={ALL_EXTENSIONS} />
 
       <h1 className="text-3xl font-bold text-primary">iPhone to Pixel Converter</h1>
+
+      <ItemGroup className="w-full max-w-2xl">
+        <Item>
+          <ItemMedia className={isPixelConnected ? "text-green-500" : "text-muted-foreground"}>
+            <DeviceMobile size={24} weight={isPixelConnected ? "duotone" : "regular"} />
+          </ItemMedia>
+          <ItemContent>
+            <ItemTitle>Pixel Connection Status</ItemTitle>
+            <ItemDescription>
+              {isPixelConnected 
+                ? "Device connected and ready for transfer" 
+                : "No Pixel device found via ADB"}
+            </ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            {isPixelConnected ? (
+              <CheckCircle size={20} className="text-green-500" weight="fill" />
+            ) : (
+              <XCircle size={20} className="text-red-500" weight="fill" />
+            )}
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleCheckAdb} 
+              disabled={isRunning}
+              className="h-8 w-8"
+            >
+              <ArrowsClockwise 
+                className={isRunning ? "animate-spin" : ""} 
+                size={16} 
+              />
+              <span className="sr-only">Check Again</span>
+            </Button>
+          </ItemActions>
+        </Item>
+      </ItemGroup>
 
       <Card className="w-full max-w-2xl">
         <CardHeader>
@@ -144,16 +194,7 @@ function App() {
 
               <div className="border-t pt-4 mt-2">
                 <div className="flex flex-col items-center gap-2">
-                   <div className="flex gap-2">
-                      <Button 
-                        variant="secondary" 
-                        onClick={handleCheckAdb} 
-                        disabled={isRunning}
-                      >
-                        <DeviceMobile data-icon="inline-start" />
-                        Check for Pixel
-                      </Button>
-                      
+                   <div className="flex gap-2 justify-center min-h-[40px]">
                       {isPixelConnected && (
                         <Button 
                           className="bg-green-600 hover:bg-green-700" 
@@ -165,9 +206,6 @@ function App() {
                         </Button>
                       )}
                    </div>
-                   {isPixelConnected && (
-                     <p className="text-xs text-green-600 font-medium">Pixel Connected via ADB</p>
-                   )}
                 </div>
               </div>
             </div>
