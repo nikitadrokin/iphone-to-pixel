@@ -20,6 +20,7 @@ import DropzoneOverlay from '@/components/dropzone-overlay'
 import LogViewer from '@/components/log-viewer'
 import PathList from '@/components/path-list'
 import ActionItem from '@/components/action-item'
+import Footer from '@/components/footer'
 import { useDragDrop } from '@/hooks/use-drag-drop'
 import usePixel from '@/hooks/use-pixel'
 import {
@@ -267,6 +268,8 @@ function App() {
       </ItemGroup>
 
       <LogViewer logs={pixel.logs} logsEndRef={pixel.logsEndRef} />
+
+      <Footer />
     </div>
   )
 }
