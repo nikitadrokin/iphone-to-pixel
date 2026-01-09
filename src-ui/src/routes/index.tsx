@@ -123,9 +123,43 @@ function App() {
     })
   }, [execute])
 
-  async function handlePushToPixel() {
-    if (selectedPaths.length === 0 || !isPixelConnected) return
-    await execute(['push-to-pixel', ...selectedPaths])
+  async function handlePushFiles() {
+    if (!isPixelConnected) return
+    try {
+      const selected = await open({
+        directory: false,
+        multiple: true,
+        filters: [
+          {
+            name: 'Media',
+            extensions: [...IMAGE_EXTENSIONS, ...VIDEO_EXTENSIONS],
+          },
+        ],
+        title: 'Select Files to Push to Pixel',
+      })
+      if (selected) {
+        const paths = Array.isArray(selected) ? selected : [selected]
+        await execute(['push-to-pixel', ...paths])
+      }
+    } catch (err) {
+      console.error('Failed to select files:', err)
+    }
+  }
+
+  async function handlePushFolder() {
+    if (!isPixelConnected) return
+    try {
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: 'Select Folder to Push to Pixel',
+      })
+      if (selected && typeof selected === 'string') {
+        await execute(['push-to-pixel', selected])
+      }
+    } catch (err) {
+      console.error('Failed to select folder:', err)
+    }
   }
 
   async function handlePullFromPixel() {
@@ -269,14 +303,10 @@ function App() {
         )}
 
         {/* Push to Pixel */}
-        <Item
-          className={!isPixelConnected || !hasSelection ? 'opacity-50' : ''}
-        >
+        <Item className={!isPixelConnected ? 'opacity-50' : ''}>
           <ItemMedia
             className={
-              isPixelConnected && hasSelection
-                ? 'text-green-500'
-                : 'text-muted-foreground'
+              isPixelConnected ? 'text-green-500' : 'text-muted-foreground'
             }
           >
             <Export size={24} weight="bold" />
@@ -284,20 +314,29 @@ function App() {
           <ItemContent>
             <ItemTitle>Push to Pixel</ItemTitle>
             <ItemDescription>
-              {!isPixelConnected
-                ? 'Connect a Pixel device first'
-                : !hasSelection
-                  ? 'Select media to push'
-                  : 'Push selected files to /sdcard/DCIM/Camera'}
+              {isPixelConnected
+                ? 'Push files to /sdcard/DCIM/Camera'
+                : 'Connect a Pixel device first'}
             </ItemDescription>
           </ItemContent>
           <ItemActions>
             <Button
               variant="outline"
-              onClick={handlePushToPixel}
-              disabled={isRunning || !isPixelConnected || !hasSelection}
+              size="sm"
+              onClick={handlePushFolder}
+              disabled={isRunning || !isPixelConnected}
             >
-              Push
+              <Folder data-icon="inline-start" />
+              Folder
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePushFiles}
+              disabled={isRunning || !isPixelConnected}
+            >
+              <File data-icon="inline-start" />
+              Files
             </Button>
           </ItemActions>
         </Item>
