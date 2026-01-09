@@ -9,11 +9,11 @@ interface LogViewerProps {
   logsEndRef?: React.RefObject<HTMLDivElement | null>
 }
 
-export function LogViewer({
+const LogViewer: React.FC<LogViewerProps> = ({
   logs,
   emptyMessage = 'Logs will appear here...',
   logsEndRef,
-}: LogViewerProps) {
+}) => {
   return (
     <Card className="w-full max-w-2xl p-0 relative">
       <ScrollArea className="h-72 px-4 font-mono text-sm">
@@ -40,3 +40,5 @@ export function LogViewer({
     </Card>
   )
 }
+
+export default LogViewer

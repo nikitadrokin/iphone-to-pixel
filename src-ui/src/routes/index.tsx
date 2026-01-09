@@ -14,9 +14,9 @@ import {
 } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { DropzoneOverlay } from '@/components/dropzone-overlay'
-import { LogViewer } from '@/components/LogViewer'
-import { PathList } from '@/components/PathList'
+import DropzoneOverlay from '@/components/dropzone-overlay'
+import LogViewer from '@/components/log-viewer'
+import PathList from '@/components/path-list'
 import {
   Item,
   ItemGroup,
