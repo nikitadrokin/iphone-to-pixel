@@ -118,12 +118,10 @@ function App() {
             <PathList paths={selectedPaths} onClear={clearSelection} />
 
             {(isMobile || !sidebarOpen) && (
-              <>
-                <PixelActionItems
-                  selectedPaths={selectedPaths}
-                  hasSelection={hasSelection}
-                />
-              </>
+              <PixelActionItems
+                selectedPaths={selectedPaths}
+                hasSelection={hasSelection}
+              />
             )}
           </ItemGroup>
 
