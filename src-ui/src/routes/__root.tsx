@@ -2,7 +2,7 @@ import { Outlet, createRootRoute } from '@tanstack/react-router'
 import { Toaster } from '@/components/ui/sonner'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import AppSidebar from '@/components/app-sidebar'
-import { PixelProvider, usePixelContext } from '@/contexts/pixel-context'
+import { PixelProvider, usePixel } from '@/contexts/pixel-context'
 
 export const Route = createRootRoute({
   component: RootComponent,
@@ -23,7 +23,7 @@ function RootComponent() {
 }
 
 function AppSidebarWithContext() {
-  const pixel = usePixelContext()
+  const pixel = usePixel()
   return (
     <AppSidebar
       isPixelConnected={pixel.isConnected}

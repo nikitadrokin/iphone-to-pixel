@@ -11,7 +11,7 @@ export interface TransferPaths {
 
 export type ActiveOperation = 'pull' | 'push' | 'convert' | null
 
-const usePixel = () => {
+const usePixelInternal = () => {
   const [isConnected, setIsConnected] = useState(false)
   const [activeOperation, setActiveOperation] = useState<ActiveOperation>(null)
   const [transferPaths, setTransferPaths] = useState<TransferPaths | null>(null)
@@ -157,4 +157,4 @@ const usePixel = () => {
   }
 }
 
-export default usePixel
+export default usePixelInternal

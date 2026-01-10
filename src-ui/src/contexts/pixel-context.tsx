@@ -1,7 +1,7 @@
 import { createContext, useContext, type ReactNode } from 'react'
-import usePixel from '@/hooks/use-pixel'
+import usePixelInternal from '@/hooks/use-pixel'
 
-type PixelContextValue = ReturnType<typeof usePixel>
+type PixelContextValue = ReturnType<typeof usePixelInternal>
 
 const PixelContext = createContext<PixelContextValue | null>(null)
 
@@ -10,14 +10,15 @@ interface PixelProviderProps {
 }
 
 export const PixelProvider: React.FC<PixelProviderProps> = ({ children }) => {
-  const pixel = usePixel()
+  const pixel = usePixelInternal()
   return <PixelContext.Provider value={pixel}>{children}</PixelContext.Provider>
 }
 
-export function usePixelContext(): PixelContextValue {
+/** Shared hook for Pixel device operations - must be used within PixelProvider */
+export function usePixel(): PixelContextValue {
   const context = useContext(PixelContext)
   if (!context) {
-    throw new Error('usePixelContext must be used within a PixelProvider')
+    throw new Error('usePixel must be used within a PixelProvider')
   }
   return context
 }

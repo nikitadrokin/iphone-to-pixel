@@ -18,7 +18,7 @@ import LogViewer from '@/components/log-viewer'
 import PathList from '@/components/path-list'
 import ActionItem from '@/components/action-item'
 import { useDragDrop } from '@/hooks/use-drag-drop'
-import { usePixelContext } from '@/contexts/pixel-context'
+import { usePixel } from '@/contexts/pixel-context'
 import {
   ALL_EXTENSIONS,
   IMAGE_EXTENSIONS,
@@ -30,7 +30,7 @@ export const Route = createFileRoute('/')({ component: App })
 
 function App() {
   const [selectedPaths, setSelectedPaths] = useState<string[]>([])
-  const pixel = usePixelContext()
+  const pixel = usePixel()
   const { open: sidebarOpen } = useSidebar()
   const isMobile = useIsMobile()
 
