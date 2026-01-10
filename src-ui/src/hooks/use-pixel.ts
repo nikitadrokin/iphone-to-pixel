@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { open } from '@tauri-apps/plugin-dialog'
 import { useCommand } from '@/hooks/use-command'
+import { useTerminal } from '@/hooks/use-terminal'
 import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '@/lib/constants'
 
 const usePixel = () => {
@@ -9,6 +10,8 @@ const usePixel = () => {
   const { execute, isRunning, logs, clearLogs, logsEndRef } = useCommand({
     sidecar: 'binaries/itp',
   })
+
+  const terminal = useTerminal()
 
   const checkConnection = useCallback(async () => {
     await execute(['check-adb'], {
@@ -66,8 +69,9 @@ const usePixel = () => {
 
   const shell = useCallback(async () => {
     if (!isConnected) return
-    await execute(['shell'])
-  }, [isConnected, execute])
+    // Open ADB shell in native terminal (interactive session)
+    await terminal.openInTerminal('adb', ['shell'])
+  }, [isConnected, terminal])
 
   const convert = useCallback(
     async (paths: string[]) => {
@@ -75,6 +79,15 @@ const usePixel = () => {
       await execute(['convert', ...paths, '--ui'])
     },
     [execute],
+  )
+
+  const convertInTerminal = useCallback(
+    async (paths: string[]) => {
+      if (paths.length === 0) return
+      // Open the native terminal with the itp convert command
+      await terminal.openInTerminal('itp', ['convert', ...paths])
+    },
+    [terminal],
   )
 
   return {
@@ -89,6 +102,9 @@ const usePixel = () => {
     pull,
     shell,
     convert,
+    convertInTerminal,
+    terminalName: terminal.terminalName,
+    terminalReady: terminal.isReady,
   }
 }
 

@@ -161,6 +161,16 @@ function App() {
                     >
                       {pixel.isRunning ? 'Converting...' : 'Start'}
                     </Button>
+                    {pixel.terminalReady && pixel.terminalName && (
+                      <Button
+                        variant="outline"
+                        onClick={() => pixel.convertInTerminal(selectedPaths)}
+                        disabled={pixel.isRunning}
+                      >
+                        <Terminal data-icon="inline-start" />
+                        {pixel.terminalName}
+                      </Button>
+                    )}
                   </ActionItem>
                 )}
 
@@ -242,9 +252,7 @@ function App() {
                   <Button
                     variant="outline"
                     onClick={pixel.shell}
-                    // currently this isn't working as expected with "interactive" mode
-                    disabled={true}
-                    // disabled={pixel.isRunning || !pixel.isConnected}
+                    disabled={pixel.isRunning || !pixel.isConnected}
                   >
                     Open
                   </Button>

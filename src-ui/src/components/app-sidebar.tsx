@@ -190,8 +190,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={onShell}
-                  disabled={true} // Currently not working with interactive mode
-                  data-disabled={true}
+                  disabled={!isPixelConnected || isRunning}
+                  data-disabled={!isPixelConnected || isRunning}
                   tooltip={
                     isPixelConnected
                       ? 'Open an interactive ADB shell session'
