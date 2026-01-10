@@ -1,4 +1,11 @@
-import { useState, useCallback, useEffect } from 'react'
+import {
+  useState,
+  useCallback,
+  useEffect,
+  createContext,
+  useContext,
+  type ReactNode,
+} from 'react'
 import { open } from '@tauri-apps/plugin-dialog'
 import { useCommand } from '@/hooks/use-command'
 import { useTerminal } from '@/hooks/use-terminal'
@@ -11,7 +18,8 @@ export interface TransferPaths {
 
 export type ActiveOperation = 'pull' | 'push' | 'convert' | null
 
-const usePixel = () => {
+// Internal hook with the actual logic
+const usePixelState = () => {
   const [isConnected, setIsConnected] = useState(false)
   const [activeOperation, setActiveOperation] = useState<ActiveOperation>(null)
   const [transferPaths, setTransferPaths] = useState<TransferPaths | null>(null)
@@ -155,6 +163,29 @@ const usePixel = () => {
     transferPaths,
     openActiveInTerminal,
   }
+}
+
+// Context Setup
+type PixelContextValue = ReturnType<typeof usePixelState>
+
+const PixelContext = createContext<PixelContextValue | null>(null)
+
+interface PixelProviderProps {
+  children: ReactNode
+}
+
+export const PixelProvider: React.FC<PixelProviderProps> = ({ children }) => {
+  const pixel = usePixelState()
+  return <PixelContext.Provider value={pixel}>{children}</PixelContext.Provider>
+}
+
+// Public Hook (Consumer)
+const usePixel = (): PixelContextValue => {
+  const context = useContext(PixelContext)
+  if (!context) {
+    throw new Error('usePixel must be used within a PixelProvider')
+  }
+  return context
 }
 
 export default usePixel

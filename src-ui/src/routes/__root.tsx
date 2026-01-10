@@ -2,32 +2,37 @@ import { Outlet, createRootRoute } from '@tanstack/react-router'
 import { Toaster } from '@/components/ui/sonner'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import AppSidebar from '@/components/app-sidebar'
-import usePixel from '@/hooks/use-pixel'
+import { PixelProvider, usePixelContext } from '@/contexts/pixel-context'
 
 export const Route = createRootRoute({
   component: RootComponent,
 })
 
 function RootComponent() {
-  const pixel = usePixel()
-
   return (
-    <>
+    <PixelProvider>
       <SidebarProvider>
-        <AppSidebar
-          isPixelConnected={pixel.isConnected}
-          onCheckConnection={pixel.checkConnection}
-          isRunning={pixel.isRunning}
-          onPushFolder={pixel.pushFolder}
-          onPushFiles={pixel.pushFiles}
-          onPull={pixel.pull}
-          onShell={pixel.shell}
-        />
+        <AppSidebarWithContext />
         <SidebarInset className="flex flex-col">
           <Outlet />
           <Toaster position="bottom-center" richColors />
         </SidebarInset>
       </SidebarProvider>
-    </>
+    </PixelProvider>
+  )
+}
+
+function AppSidebarWithContext() {
+  const pixel = usePixelContext()
+  return (
+    <AppSidebar
+      isPixelConnected={pixel.isConnected}
+      onCheckConnection={pixel.checkConnection}
+      isRunning={pixel.isRunning}
+      onPushFolder={pixel.pushFolder}
+      onPushFiles={pixel.pushFiles}
+      onPull={pixel.pull}
+      onShell={pixel.shell}
+    />
   )
 }

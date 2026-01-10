@@ -6,28 +6,19 @@ import {
   Folder,
   Play,
   Spinner,
-  DeviceMobile,
   Export,
-  ArrowsClockwise,
-  CheckCircle,
-  XCircle,
   Terminal,
   DownloadSimple,
 } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { ItemGroup } from '@/components/ui/item'
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-  useSidebar,
-} from '@/components/ui/sidebar'
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
 import DropzoneOverlay from '@/components/dropzone-overlay'
 import LogViewer from '@/components/log-viewer'
 import PathList from '@/components/path-list'
 import ActionItem from '@/components/action-item'
 import { useDragDrop } from '@/hooks/use-drag-drop'
-import usePixel from '@/hooks/use-pixel'
+import { usePixelContext } from '@/contexts/pixel-context'
 import {
   ALL_EXTENSIONS,
   IMAGE_EXTENSIONS,
@@ -39,7 +30,7 @@ export const Route = createFileRoute('/')({ component: App })
 
 function App() {
   const [selectedPaths, setSelectedPaths] = useState<string[]>([])
-  const pixel = usePixel()
+  const pixel = usePixelContext()
   const { open: sidebarOpen } = useSidebar()
   const isMobile = useIsMobile()
 
@@ -262,7 +253,13 @@ function App() {
           </ItemGroup>
 
           {/* Log Viewer */}
-          <LogViewer logs={pixel.logs} logsEndRef={pixel.logsEndRef} />
+          <LogViewer
+            logs={pixel.logs}
+            logsEndRef={pixel.logsEndRef}
+            transferPaths={pixel.transferPaths}
+            onOpenTerminal={pixel.openActiveInTerminal}
+            terminalName={pixel.terminalName}
+          />
         </div>
       </main>
     </>
