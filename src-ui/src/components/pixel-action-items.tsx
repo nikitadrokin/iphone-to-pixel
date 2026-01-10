@@ -4,18 +4,63 @@ import {
   Export,
   Terminal,
   DownloadSimple,
+  Spinner,
+  Play,
 } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import ActionItem from '@/components/action-item'
 import { usePixel } from '@/contexts/pixel-context'
 
-interface PixelActionItemsProps {}
+interface PixelActionItemsProps {
+  selectedPaths: string[]
+  hasSelection: boolean
+}
 
-const PixelActionItems: React.FC<PixelActionItemsProps> = ({}) => {
+const PixelActionItems: React.FC<PixelActionItemsProps> = ({
+  selectedPaths,
+  hasSelection,
+}) => {
   const pixel = usePixel()
 
   return (
     <>
+      {/* Convert */}
+      {hasSelection && (
+        <ActionItem
+          icon={
+            pixel.isRunning ? (
+              <Spinner size={24} className="animate-spin" />
+            ) : (
+              <Play size={24} weight="fill" />
+            )
+          }
+          iconClass={pixel.isRunning ? 'text-amber-500' : 'text-primary'}
+          title={pixel.isRunning ? 'Converting...' : 'Convert Media'}
+          description={
+            pixel.isRunning
+              ? 'Processing your files...'
+              : 'Convert selected media for Pixel compatibility'
+          }
+        >
+          <Button
+            onClick={() => pixel.convert(selectedPaths)}
+            disabled={pixel.isRunning}
+          >
+            {pixel.isRunning ? 'Converting...' : 'Start'}
+          </Button>
+          {pixel.terminalReady && pixel.terminalName && (
+            <Button
+              variant="outline"
+              onClick={() => pixel.convertInTerminal(selectedPaths)}
+              disabled={pixel.isRunning}
+            >
+              <Terminal data-icon="inline-start" />
+              {pixel.terminalName}
+            </Button>
+          )}
+        </ActionItem>
+      )}
+      {/* Push to Pixel */}
       <ActionItem
         icon={<Export size={24} weight="bold" />}
         iconClass={

@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { open } from '@tauri-apps/plugin-dialog'
-import { File, Folder, Play, Spinner, Terminal } from '@phosphor-icons/react'
+import { File, Folder } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { ItemGroup } from '@/components/ui/item'
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
@@ -119,47 +119,10 @@ function App() {
 
             {(isMobile || !sidebarOpen) && (
               <>
-                {/* Convert */}
-                {hasSelection && (
-                  <ActionItem
-                    icon={
-                      pixel.isRunning ? (
-                        <Spinner size={24} className="animate-spin" />
-                      ) : (
-                        <Play size={24} weight="fill" />
-                      )
-                    }
-                    iconClass={
-                      pixel.isRunning ? 'text-amber-500' : 'text-primary'
-                    }
-                    title={pixel.isRunning ? 'Converting...' : 'Convert Media'}
-                    description={
-                      pixel.isRunning
-                        ? 'Processing your files...'
-                        : 'Convert selected media for Pixel compatibility'
-                    }
-                  >
-                    <Button
-                      onClick={() => pixel.convert(selectedPaths)}
-                      disabled={pixel.isRunning}
-                    >
-                      {pixel.isRunning ? 'Converting...' : 'Start'}
-                    </Button>
-                    {pixel.terminalReady && pixel.terminalName && (
-                      <Button
-                        variant="outline"
-                        onClick={() => pixel.convertInTerminal(selectedPaths)}
-                        disabled={pixel.isRunning}
-                      >
-                        <Terminal data-icon="inline-start" />
-                        {pixel.terminalName}
-                      </Button>
-                    )}
-                  </ActionItem>
-                )}
-
-                {/* Push to Pixel */}
-                <PixelActionItems />
+                <PixelActionItems
+                  selectedPaths={selectedPaths}
+                  hasSelection={hasSelection}
+                />
               </>
             )}
           </ItemGroup>
