@@ -1,23 +1,12 @@
 import { ArrowRight, Terminal, Trash } from '@phosphor-icons/react'
-import type { LogMessage } from '@/lib/types'
-import type { TransferPaths } from '@/hooks/use-pixel'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import ScrollArea from '@/components/ui/scroll-area'
+import usePixel from '@/hooks/use-pixel'
 
 interface LogViewerProps {
-  logs: LogMessage[]
   emptyMessage?: string
-  logsEndRef?: React.RefObject<HTMLDivElement | null>
-  /** Transfer paths to show in header */
-  transferPaths?: TransferPaths | null
-  /** Callback when "Open in Terminal" is clicked */
-  onOpenTerminal?: () => void
-  /** Name of the detected terminal (e.g. "Ghostty") */
-  terminalName?: string | null
-  /** Callback when "Clear" button is clicked */
-  onClear?: () => void
 }
 
 /** Truncate a path to show only the last N segments */
@@ -28,14 +17,17 @@ const truncatePath = (path: string, segments: number = 2): string => {
 }
 
 const LogViewer: React.FC<LogViewerProps> = ({
-  logs,
   emptyMessage = 'Logs will appear here...',
-  logsEndRef,
-  transferPaths,
-  onOpenTerminal,
-  terminalName,
-  onClear,
 }) => {
+  const {
+    logs,
+    logsEndRef,
+    transferPaths,
+    openActiveInTerminal,
+    terminalName,
+    clearLogs,
+  } = usePixel()
+
   return (
     <Card className="w-full max-w-3xl p-0 relative overflow-hidden">
       {/* Sticky header */}
@@ -45,11 +37,11 @@ const LogViewer: React.FC<LogViewerProps> = ({
             <Terminal size={16} className="text-muted-foreground" />
             <span>Terminal Output</span>
           </div>
-          {onClear && logs.length > 0 && (
+          {clearLogs && logs.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={onClear}
+              onClick={clearLogs}
               className="h-6 text-xs text-muted-foreground hover:text-destructive"
             >
               <Trash size={12} />
@@ -69,11 +61,11 @@ const LogViewer: React.FC<LogViewerProps> = ({
                 {truncatePath(transferPaths.destination)}
               </span>
             </div>
-            {onOpenTerminal && terminalName && (
+            {openActiveInTerminal && terminalName && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={onOpenTerminal}
+                onClick={openActiveInTerminal}
                 className="h-6 text-xs shrink-0"
               >
                 <Terminal size={12} />

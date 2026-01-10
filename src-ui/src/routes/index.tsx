@@ -165,14 +165,7 @@ function App() {
           </ItemGroup>
 
           {/* Log Viewer */}
-          <LogViewer
-            logs={pixel.logs}
-            logsEndRef={pixel.logsEndRef}
-            transferPaths={pixel.transferPaths}
-            onOpenTerminal={pixel.openActiveInTerminal}
-            terminalName={pixel.terminalName}
-            onClear={pixel.clearLogs}
-          />
+          <LogViewer emptyMessage="Select files or a folder to convert" />
         </div>
       </main>
     </>
