@@ -259,6 +259,7 @@ function App() {
             transferPaths={pixel.transferPaths}
             onOpenTerminal={pixel.openActiveInTerminal}
             terminalName={pixel.terminalName}
+            onClear={pixel.clearLogs}
           />
         </div>
       </main>

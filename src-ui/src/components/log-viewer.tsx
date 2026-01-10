@@ -1,4 +1,4 @@
-import { ArrowRight, Terminal } from '@phosphor-icons/react'
+import { ArrowRight, Terminal, Trash } from '@phosphor-icons/react'
 import type { LogMessage } from '@/lib/types'
 import type { TransferPaths } from '@/hooks/use-pixel'
 import { Card } from '@/components/ui/card'
@@ -16,6 +16,8 @@ interface LogViewerProps {
   onOpenTerminal?: () => void
   /** Name of the detected terminal (e.g. "Ghostty") */
   terminalName?: string | null
+  /** Callback when "Clear" button is clicked */
+  onClear?: () => void
 }
 
 /** Truncate a path to show only the last N segments */
@@ -32,34 +34,55 @@ const LogViewer: React.FC<LogViewerProps> = ({
   transferPaths,
   onOpenTerminal,
   terminalName,
+  onClear,
 }) => {
   return (
-    <Card className="w-full max-w-3xl p-0 relative">
-      {/* Transfer context header */}
-      {transferPaths && (
-        <div className="flex items-center justify-between gap-2 px-4 py-2 border-b bg-muted/50">
-          <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground min-w-0">
-            <span className="truncate" title={transferPaths.source}>
-              {truncatePath(transferPaths.source)}
-            </span>
-            <ArrowRight size={12} className="shrink-0" />
-            <span className="truncate" title={transferPaths.destination}>
-              {truncatePath(transferPaths.destination)}
-            </span>
+    <Card className="w-full max-w-3xl p-0 relative overflow-hidden">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-10 bg-card border-b">
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-2 text-sm font-medium">
+            <Terminal size={16} className="text-muted-foreground" />
+            <span>Terminal Output</span>
           </div>
-          {onOpenTerminal && terminalName && (
+          {onClear && logs.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              onClick={onOpenTerminal}
-              className="h-6 text-xs shrink-0"
+              onClick={onClear}
+              className="h-6 text-xs text-muted-foreground hover:text-destructive"
             >
-              <Terminal size={12} />
-              {terminalName}
+              <Trash size={12} />
+              Clear
             </Button>
           )}
         </div>
-      )}
+        {/* Transfer context sub-header */}
+        {transferPaths && (
+          <div className="flex items-center justify-between gap-2 px-4 py-2 border-t bg-muted/50">
+            <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground min-w-0">
+              <span className="truncate" title={transferPaths.source}>
+                {truncatePath(transferPaths.source)}
+              </span>
+              <ArrowRight size={12} className="shrink-0" />
+              <span className="truncate" title={transferPaths.destination}>
+                {truncatePath(transferPaths.destination)}
+              </span>
+            </div>
+            {onOpenTerminal && terminalName && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onOpenTerminal}
+                className="h-6 text-xs shrink-0"
+              >
+                <Terminal size={12} />
+                {terminalName}
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
       <ScrollArea className="h-72 p-4 font-mono text-sm">
         {logs.length === 0 && (
           <span className="text-muted-foreground">{emptyMessage}</span>
