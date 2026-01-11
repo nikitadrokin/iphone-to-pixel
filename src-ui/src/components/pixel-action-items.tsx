@@ -60,6 +60,7 @@ const PixelActionItems: React.FC<PixelActionItemsProps> = ({
           )}
         </ActionItem>
       )}
+
       {/* Push to Pixel */}
       <ActionItem
         icon={<Export size={24} weight="bold" />}
@@ -91,7 +92,8 @@ const PixelActionItems: React.FC<PixelActionItemsProps> = ({
           <File data-icon="inline-start" /> Files
         </Button>
       </ActionItem>
-      ){/* Pull from Pixel */}
+
+      {/* Pull from Pixel */}
       <ActionItem
         icon={<DownloadSimple size={24} weight="bold" />}
         iconClass={
@@ -113,6 +115,7 @@ const PixelActionItems: React.FC<PixelActionItemsProps> = ({
           Pull
         </Button>
       </ActionItem>
+
       {/* Launch Shell */}
       <ActionItem
         icon={<Terminal size={24} weight="bold" />}
