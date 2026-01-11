@@ -82,8 +82,8 @@ function App() {
       {/* Header with sidebar trigger */}
       <header
         className={cn(
-          'flex h-14 shrink-0 items-center gap-2 px-4 transition-[margin] ease-in-out',
-          isFullscreen ? '' : !sidebarOpen ? 'ml-22' : '',
+          'flex h-14 shrink-0 items-center gap-2 px-4 transition-[margin,padding] ease-in-out sticky top-0 z-11 bg-background',
+          isFullscreen ? '' : !sidebarOpen ? 'pl-26' : '',
         )}
       >
         <SidebarTrigger className="-ml-1" />
@@ -92,7 +92,7 @@ function App() {
         </div>
       </header>
 
-      <Separator />
+      <Separator className="sticky top-14 z-2" />
 
       {/* Main content - Conversion workflow */}
       <main className="flex-1 overflow-auto p-2">
