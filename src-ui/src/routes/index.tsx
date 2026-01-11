@@ -80,7 +80,7 @@ function App() {
       {/* Header with sidebar trigger */}
       <header
         className={cn(
-          'flex h-14 shrink-0 items-center gap-2 px-4 transition-[margin]',
+          'flex h-14 shrink-0 items-center gap-2 px-4 transition-[margin] ease-in-out',
           !sidebarOpen && 'ml-22',
         )}
       >
@@ -93,8 +93,8 @@ function App() {
       <Separator />
 
       {/* Main content - Conversion workflow */}
-      <main className="flex-1 overflow-auto p-4 md:p-6">
-        <div className="mx-auto max-w-3xl space-y-6">
+      <main className="flex-1 overflow-auto p-2">
+        <div className="mx-auto flex flex-col max-w-3xl h-full space-y-6">
           {/* Select Media */}
           <ItemGroup>
             <ActionItem
