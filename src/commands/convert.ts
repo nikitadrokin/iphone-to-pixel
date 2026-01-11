@@ -4,6 +4,7 @@ import { Command } from 'commander';
 import { z } from 'zod';
 import { processImage } from '../processors/image.js';
 import { processVideo } from '../processors/video.js';
+import { processLegacyVideo } from '../processors/legacy-video.js';
 import { logger } from '../utils/logger.js';
 import { validateTools } from '../utils/validation.js';
 
@@ -14,6 +15,7 @@ const convertOptionsSchema = z.object({
 
 const IMAGE_EXTENSIONS = ['heic', 'heif', 'jpg', 'jpeg', 'png', 'gif', 'dng'];
 const VIDEO_EXTENSIONS = ['mov', 'mp4', 'm4v'];
+const LEGACY_VIDEO_EXTENSIONS = ['mpg', 'mpeg'];
 
 export const convert = new Command()
   .name('convert')
@@ -119,7 +121,11 @@ async function processDirectory(dirPath: string): Promise<void> {
 async function processIndividualFiles(filePaths: string[]): Promise<void> {
   const regularFiles = filePaths.filter((f) => {
     const ext = path.extname(f).toLowerCase().slice(1);
-    return IMAGE_EXTENSIONS.includes(ext) || VIDEO_EXTENSIONS.includes(ext);
+    return (
+      IMAGE_EXTENSIONS.includes(ext) ||
+      VIDEO_EXTENSIONS.includes(ext) ||
+      LEGACY_VIDEO_EXTENSIONS.includes(ext)
+    );
   });
 
   if (regularFiles.length === 0) {
@@ -206,6 +212,28 @@ async function processFiles(
       }
 
       await processVideo(file, outFile);
+      processedCount++;
+      continue;
+    }
+
+    if (LEGACY_VIDEO_EXTENSIONS.includes(ext)) {
+      const stem = path.basename(file, path.extname(file));
+      const outFile = path.join(outputDirectory, `${stem}.mp4`);
+
+      if (outFile === file) {
+        skippedCount++;
+        continue;
+      }
+
+      try {
+        await fs.access(outFile);
+        skippedCount++;
+        continue;
+      } catch {
+        // File doesn't exist, proceed
+      }
+
+      await processLegacyVideo(file, outFile);
       processedCount++;
       continue;
     }
