@@ -54,23 +54,13 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   }, [])
 
   return (
-    <Sidebar>
-      <SidebarHeader className="p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-lg">
-            📱
-          </div>
-          <div className="flex flex-col">
-            <span className="font-semibold text-sm">iPhone to Pixel</span>
-            <span className="text-xs text-muted-foreground">
-              Media Converter
-            </span>
-          </div>
-        </div>
+    <Sidebar variant="floating">
+      <SidebarHeader className="px-4 pt-2.5">
+        <span className="font-semibold text-sm inline-block ml-18">
+          iPhone to Pixel
+        </span>
       </SidebarHeader>
-
-      <SidebarSeparator />
-
+      <SidebarSeparator className="mt-[9px]" />
       <SidebarContent>
         {/* Connection Status */}
         <SidebarGroup>

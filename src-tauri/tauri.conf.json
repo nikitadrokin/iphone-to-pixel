@@ -18,7 +18,11 @@
         "height": 600,
         "minWidth": 420,
         "minHeight": 360,
-        "titleBarStyle": "Transparent",
+        "titleBarStyle": "Overlay",
+        "trafficLightPosition": {
+          "x": 22,
+          "y": 30
+        },
         "resizable": true,
         "fullscreen": false
       }
@@ -38,8 +42,6 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "externalBin": [
-      "binaries/itp"
-    ]
+    "externalBin": ["binaries/itp"]
   }
 }
