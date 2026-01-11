@@ -1,0 +1,79 @@
+import { execa } from 'execa';
+
+/**
+ * Date tag priority chain (later tags override earlier ones):
+ * MediaCreateDate -> CreateDate -> DateTimeOriginal -> ContentCreateDate -> CreationDate
+ */
+const DATE_COPY_ARGS = [
+  // Base fallback
+  '-AllDates<MediaCreateDate',
+  '-Track*Date<MediaCreateDate',
+  '-Media*Date<MediaCreateDate',
+  '-FileCreateDate<MediaCreateDate',
+  '-FileModifyDate<MediaCreateDate',
+  // CreateDate (QuickTime group - Google Photos exports)
+  '-AllDates<CreateDate',
+  '-Track*Date<CreateDate',
+  '-Media*Date<CreateDate',
+  '-FileCreateDate<CreateDate',
+  '-FileModifyDate<CreateDate',
+  // DateTimeOriginal (common in older formats)
+  '-AllDates<DateTimeOriginal',
+  '-Track*Date<DateTimeOriginal',
+  '-Media*Date<DateTimeOriginal',
+  '-FileCreateDate<DateTimeOriginal',
+  '-FileModifyDate<DateTimeOriginal',
+  // ContentCreateDate (Google Photos exports, ItemList group)
+  '-AllDates<ContentCreateDate',
+  '-Track*Date<ContentCreateDate',
+  '-Media*Date<ContentCreateDate',
+  '-FileCreateDate<ContentCreateDate',
+  '-FileModifyDate<ContentCreateDate',
+  // CreationDate (highest priority - iPhone native, Keys group)
+  '-AllDates<CreationDate',
+  '-Track*Date<CreationDate',
+  '-Media*Date<CreationDate',
+  '-FileCreateDate<CreationDate',
+  '-FileModifyDate<CreationDate',
+];
+
+/**
+ * Check if a file has a valid CreateDate
+ */
+export async function hasValidCreateDate(filePath: string): Promise<boolean> {
+  const { stdout } = await execa('exiftool', ['-s3', '-CreateDate', filePath]);
+  return !!stdout.trim() && !stdout.includes('0000:00:00');
+}
+
+/**
+ * Copy date metadata from source file to target file using priority chain.
+ * If source and target are the same, reads and writes to the same file.
+ */
+export async function copyDatesFromSource(
+  sourcePath: string,
+  targetPath: string,
+): Promise<void> {
+  await execa('exiftool', [
+    '-quiet',
+    '-overwrite_original',
+    '-api',
+    'QuickTimeUTC',
+    '-TagsFromFile',
+    sourcePath,
+    ...DATE_COPY_ARGS,
+    targetPath,
+  ]);
+}
+
+/**
+ * Fix dates on a file in-place by reading from its own metadata.
+ */
+export async function fixDatesInPlace(filePath: string): Promise<void> {
+  await execa('exiftool', [
+    '-overwrite_original',
+    '-api',
+    'QuickTimeUTC',
+    ...DATE_COPY_ARGS,
+    filePath,
+  ]);
+}

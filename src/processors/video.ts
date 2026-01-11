@@ -2,6 +2,7 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { execa } from 'execa';
 import { logger } from '../utils/logger.js';
+import { copyDatesFromSource, hasValidCreateDate } from '../utils/dates.js';
 
 interface CodecInfo {
   video: string;
@@ -113,26 +114,15 @@ export async function processVideo(
       },
     );
 
-    // Fix dates: Prioritize CreationDate over MediaCreateDate
-    await execa('exiftool', [
-      '-quiet',
-      '-overwrite_original',
-      '-api',
-      'QuickTimeUTC',
-      '-TagsFromFile',
-      inputPath,
-      '-AllDates<MediaCreateDate',
-      '-AllDates<CreationDate',
-      '-Track*Date<MediaCreateDate',
-      '-Track*Date<CreationDate',
-      '-Media*Date<MediaCreateDate',
-      '-Media*Date<CreationDate',
-      '-FileCreateDate<MediaCreateDate',
-      '-FileCreateDate<CreationDate',
-      '-FileModifyDate<MediaCreateDate',
-      '-FileModifyDate<CreationDate',
-      outputPath,
-    ]);
+    // Fix dates using priority chain from source file
+    await copyDatesFromSource(inputPath, outputPath);
+
+    // Verify that dates were successfully recovered
+    if (!(await hasValidCreateDate(outputPath))) {
+      logger.warn(
+        `⚠️  WARNING: Could not recover creation date for ${baseName} - metadata may need manual correction`,
+      );
+    }
   } catch (error) {
     logger.error(`❌ ERROR: Failed to convert ${baseName}`);
     // Clean up failed output file
