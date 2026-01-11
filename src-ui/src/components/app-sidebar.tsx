@@ -60,7 +60,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
           iPhone to Pixel
         </span>
       </SidebarHeader>
-      <SidebarSeparator className="mt-[9px]" />
+      <SidebarSeparator className="mt-2.5" />
       <SidebarContent>
         {/* Connection Status */}
         <SidebarGroup>

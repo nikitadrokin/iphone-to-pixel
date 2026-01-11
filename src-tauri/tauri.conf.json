@@ -23,6 +23,7 @@
           "x": 22,
           "y": 30
         },
+        "hiddenTitle": true,
         "resizable": true,
         "fullscreen": false
       }

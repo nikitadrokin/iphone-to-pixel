@@ -18,6 +18,8 @@ import {
 } from '@/lib/constants'
 import { useIsMobile } from '@/hooks/use-mobile'
 import PixelActionItems from '@/components/pixel-action-items'
+import { cn } from '@/lib/utils'
+import { Separator } from '@/components/ui/separator'
 
 export const Route = createFileRoute('/')({ component: App })
 
@@ -76,12 +78,19 @@ function App() {
       <DropzoneOverlay isVisible={isDragging} extensions={ALL_EXTENSIONS} />
 
       {/* Header with sidebar trigger */}
-      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
+      <header
+        className={cn(
+          'flex h-14 shrink-0 items-center gap-2 px-4 transition-[margin]',
+          !sidebarOpen && 'ml-22',
+        )}
+      >
         <SidebarTrigger className="-ml-1" />
         <div className="flex-1">
           <h1 className="text-lg font-semibold">Convert Media</h1>
         </div>
       </header>
+
+      <Separator />
 
       {/* Main content - Conversion workflow */}
       <main className="flex-1 overflow-auto p-4 md:p-6">
