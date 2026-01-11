@@ -20,6 +20,7 @@ import { useIsMobile } from '@/hooks/use-mobile'
 import PixelActionItems from '@/components/pixel-action-items'
 import { cn } from '@/lib/utils'
 import { Separator } from '@/components/ui/separator'
+import useIsFullscreen from '@/hooks/use-is-fullscreen'
 
 export const Route = createFileRoute('/')({ component: App })
 
@@ -28,6 +29,7 @@ function App() {
   const pixel = usePixel()
   const { open: sidebarOpen } = useSidebar()
   const isMobile = useIsMobile()
+  const isFullscreen = useIsFullscreen()
 
   const hasSelection = selectedPaths.length > 0
 
@@ -81,7 +83,7 @@ function App() {
       <header
         className={cn(
           'flex h-14 shrink-0 items-center gap-2 px-4 transition-[margin] ease-in-out',
-          !sidebarOpen && 'ml-22',
+          isFullscreen ? '' : !sidebarOpen ? 'ml-22' : '',
         )}
       >
         <SidebarTrigger className="-ml-1" />
