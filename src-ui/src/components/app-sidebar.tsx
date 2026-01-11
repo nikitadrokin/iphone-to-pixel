@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import useIsFullscreen from '@/hooks/use-is-fullscreen'
 
 interface AppSidebarProps {
   isPixelConnected: boolean
@@ -46,6 +47,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   onShell,
 }) => {
   const [version, setVersion] = useState<string>('')
+  const isFullscreen = useIsFullscreen()
 
   useEffect(() => {
     getVersion()
@@ -56,7 +58,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   return (
     <Sidebar variant="floating">
       <SidebarHeader className="px-4 pt-2.5">
-        <span className="font-semibold text-sm inline-block ml-18">
+        <span
+          className={cn(
+            'font-semibold text-sm inline-block',
+            !isFullscreen && 'ml-18',
+          )}
+        >
           iPhone to Pixel
         </span>
       </SidebarHeader>
