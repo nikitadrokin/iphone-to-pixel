@@ -80,7 +80,7 @@ while IFS= read -r -d '' FILE; do
     #        This preserves Dolby Vision, HDR10, and 10-bit color exactly.
     # Tag:   Force 'hvc1' if HEVC. Apple uses 'hvc1' or 'hev1'; Android prefers 'hvc1'.
     # Audio: Convert to AAC. Android 10 struggles with Apple's Linear PCM (lpcm) audio.
-    #        AAC 256k is transparent for almost all uses. I manually updated to 512k.
+    #        AAC 320k is transparent for almost all uses.
     
     if [[ "$VCODEC" == "hevc" ]]; then
       V_FLAGS="-c:v copy -tag:v hvc1"
