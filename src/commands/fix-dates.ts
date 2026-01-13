@@ -27,8 +27,11 @@ export const fixDates = new Command()
         cwd: path.resolve(opts.cwd),
       });
 
+      // resolve provided relative paths into absolute paths
       const resolvedPaths = paths.map((p) => path.resolve(options.cwd, p));
 
+      // try "fs.stat". if it fails, the path doesn't exist
+      // this is useful to filter nonexistent paths or options without crashing the script
       const pathStats = await Promise.all(
         resolvedPaths.map(async (p) => {
           try {
@@ -40,6 +43,7 @@ export const fixDates = new Command()
         }),
       );
 
+      // filter out nonexistent paths
       const existingPaths = pathStats.filter((p) => p.exists);
       if (existingPaths.length === 0) {
         logger.error('No valid paths provided.');
@@ -52,6 +56,7 @@ export const fixDates = new Command()
       // Collect all video files
       let videoFiles: string[] = [];
 
+      // collect video files from directories
       for (const dir of directories) {
         const dirFiles = await fs.readdir(dir.path, { withFileTypes: true });
         const videos = dirFiles
@@ -64,6 +69,7 @@ export const fixDates = new Command()
         videoFiles.push(...videos);
       }
 
+      // collect video files if files were passed instead of directories
       for (const file of files) {
         const ext = path.extname(file.path).toLowerCase().slice(1);
         if (VIDEO_EXTENSIONS.includes(ext)) {
