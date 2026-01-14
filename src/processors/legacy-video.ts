@@ -16,37 +16,44 @@ export async function processLegacyVideo(
   logger.log(`LEGACY VIDEO: ${baseName} -> MP4 (Transcoding to H.264/AAC)`);
 
   try {
-    await execa(
-      'ffmpeg',
-      [
-        '-nostdin',
-        '-v',
-        'error',
-        '-stats',
-        '-i',
-        inputPath,
-        '-c:v',
-        'libx264',
-        '-pix_fmt',
-        'yuv420p',
-        '-preset',
-        'slow',
-        '-crf',
-        '18',
-        '-c:a',
-        'aac',
-        '-b:a',
-        '320k',
-        '-movflags',
-        '+faststart',
-        '-map_metadata',
-        '0',
-        outputPath,
-      ],
-      {
-        stdio: 'inherit',
-      },
-    );
+    const ffmpeg = execa('ffmpeg', [
+      '-nostdin',
+      '-v',
+      'error',
+      '-stats',
+      '-i',
+      inputPath,
+      '-c:v',
+      'libx264',
+      '-pix_fmt',
+      'yuv420p',
+      '-preset',
+      'slow',
+      '-crf',
+      '18',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '320k',
+      '-movflags',
+      '+faststart',
+      '-map_metadata',
+      '0',
+      outputPath,
+    ]);
+
+    // FFmpeg writes progress to stderr, stream it through logger
+    ffmpeg.stderr?.on('data', (data: Buffer) => {
+      const lines = data.toString().split('\n').filter(Boolean);
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (trimmed) {
+          logger.log(`  ${trimmed}`);
+        }
+      }
+    });
+
+    await ffmpeg;
 
     // Fix dates using priority chain from source file
     await copyDatesFromSource(inputPath, outputPath);

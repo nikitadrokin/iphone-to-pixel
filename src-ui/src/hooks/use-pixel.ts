@@ -50,7 +50,7 @@ const usePixelInternal = () => {
       const paths = Array.isArray(selected) ? selected : [selected]
       setActiveOperation('push')
       setTransferPaths({ source: paths[0], destination: '/sdcard/DCIM/Camera' })
-      await execute(['push-to-pixel', ...paths], {
+      await execute(['push-to-pixel', '--jsonl', ...paths], {
         onFinish: () => setActiveOperation(null),
       })
     }
@@ -66,7 +66,7 @@ const usePixelInternal = () => {
     if (selected && typeof selected === 'string') {
       setActiveOperation('push')
       setTransferPaths({ source: selected, destination: '/sdcard/DCIM/Camera' })
-      await execute(['push-to-pixel', selected], {
+      await execute(['push-to-pixel', '--jsonl', selected], {
         onFinish: () => setActiveOperation(null),
       })
     }
@@ -82,7 +82,7 @@ const usePixelInternal = () => {
     if (destination && typeof destination === 'string') {
       setActiveOperation('pull')
       setTransferPaths({ source: '/sdcard/DCIM/Camera', destination })
-      await execute(['pull-from-pixel', destination], {
+      await execute(['pull-from-pixel', '--jsonl', destination], {
         onFinish: () => setActiveOperation(null),
       })
     }
@@ -98,7 +98,7 @@ const usePixelInternal = () => {
     async (paths: string[]) => {
       if (paths.length === 0) return
       setActiveOperation('convert')
-      await execute(['convert', ...paths, '--ui'], {
+      await execute(['convert', ...paths, '--jsonl'], {
         onFinish: () => setActiveOperation(null),
       })
     },

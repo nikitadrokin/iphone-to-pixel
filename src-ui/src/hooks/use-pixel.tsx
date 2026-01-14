@@ -7,9 +7,9 @@ import {
   type ReactNode,
 } from 'react'
 import { open } from '@tauri-apps/plugin-dialog'
-import { useCommand } from '@/hooks/use-command'
-import { useTerminal } from '@/hooks/use-terminal'
-import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '@/lib/constants'
+import { useCommand } from '../hooks/use-command'
+import { useTerminal } from '../hooks/use-terminal'
+import { IMAGE_EXTENSIONS, VIDEO_EXTENSIONS } from '../lib/constants'
 
 export interface TransferPaths {
   source: string
@@ -58,7 +58,7 @@ const usePixelState = () => {
       const paths = Array.isArray(selected) ? selected : [selected]
       setActiveOperation('push')
       setTransferPaths({ source: paths[0], destination: '/sdcard/DCIM/Camera' })
-      await execute(['push-to-pixel', ...paths], {
+      await execute(['push-to-pixel', '--jsonl', ...paths], {
         onFinish: () => setActiveOperation(null),
       })
     }
@@ -74,7 +74,7 @@ const usePixelState = () => {
     if (selected && typeof selected === 'string') {
       setActiveOperation('push')
       setTransferPaths({ source: selected, destination: '/sdcard/DCIM/Camera' })
-      await execute(['push-to-pixel', selected], {
+      await execute(['push-to-pixel', '--jsonl', selected], {
         onFinish: () => setActiveOperation(null),
       })
     }
@@ -90,7 +90,7 @@ const usePixelState = () => {
     if (destination && typeof destination === 'string') {
       setActiveOperation('pull')
       setTransferPaths({ source: '/sdcard/DCIM/Camera', destination })
-      await execute(['pull-from-pixel', destination], {
+      await execute(['pull-from-pixel', '--jsonl', destination], {
         onFinish: () => setActiveOperation(null),
       })
     }
@@ -106,7 +106,7 @@ const usePixelState = () => {
     async (paths: string[]) => {
       if (paths.length === 0) return
       setActiveOperation('convert')
-      await execute(['convert', ...paths, '--ui'], {
+      await execute(['convert', ...paths, '--jsonl'], {
         onFinish: () => setActiveOperation(null),
       })
     },

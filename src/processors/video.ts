@@ -90,29 +90,37 @@ export async function processVideo(
   );
 
   try {
-    // Remux video
-    await execa(
-      'ffmpeg',
-      [
-        '-nostdin',
-        '-v',
-        'error',
-        '-stats',
-        '-i',
-        inputPath,
-        ...videoFlags,
-        ...audioFlags,
-        '-dn',
-        '-movflags',
-        '+faststart',
-        '-map_metadata',
-        '0',
-        outputPath,
-      ],
-      {
-        stdio: 'inherit',
-      },
-    );
+    // Remux video - capture stderr for progress streaming
+    const ffmpeg = execa('ffmpeg', [
+      '-nostdin',
+      '-v',
+      'error',
+      '-stats',
+      '-i',
+      inputPath,
+      ...videoFlags,
+      ...audioFlags,
+      '-dn',
+      '-movflags',
+      '+faststart',
+      '-map_metadata',
+      '0',
+      outputPath,
+    ]);
+
+    // FFmpeg writes progress to stderr, stream it through logger
+    ffmpeg.stderr?.on('data', (data: Buffer) => {
+      const lines = data.toString().split('\n').filter(Boolean);
+      for (const line of lines) {
+        // Use carriage return lines as progress updates
+        const trimmed = line.trim();
+        if (trimmed) {
+          logger.log(`  ${trimmed}`);
+        }
+      }
+    });
+
+    await ffmpeg;
 
     // Fix dates using priority chain from source file
     await copyDatesFromSource(inputPath, outputPath);

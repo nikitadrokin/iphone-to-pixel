@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import ScrollArea from '@/components/ui/scroll-area'
-import usePixel from '@/hooks/use-pixel'
+import { usePixel } from '@/contexts/pixel-context'
 
 interface LogViewerProps {
   emptyMessage?: string
