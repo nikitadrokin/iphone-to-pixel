@@ -75,7 +75,7 @@ const LogViewer: React.FC<LogViewerProps> = ({
           </div>
         )}
       </div>
-      <ScrollArea className="grow p-4 font-mono text-sm before:top-[2.55rem]">
+      <ScrollArea className="grow p-4 font-mono text-sm before:top-[2.55rem] max-h-[400px]">
         {logs.length === 0 && (
           <span className="text-muted-foreground">{emptyMessage}</span>
         )}

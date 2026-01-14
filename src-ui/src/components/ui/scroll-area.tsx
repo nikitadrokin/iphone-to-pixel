@@ -26,7 +26,7 @@ const ScrollArea: React.FC<ScrollAreaProps> = ({
         'after:pointer-events-none after:absolute after:inset-x-0 after:bottom-0 after:z-10 after:h-(--gradient-height-bottom) after:bg-linear-to-t after:from-(--gradient-color) after:to-transparent after:content-[""]',
         isMobile
           ? 'h-full min-h-0 [&>*:first-child]:pt-(--gradient-height-top) [&>*:last-child]:pb-(--gradient-height-bottom)'
-          : 'max-h-[500px]',
+          : '',
         className,
       )}
       style={
