@@ -37,15 +37,12 @@ const LogViewer: React.FC<LogViewerProps> = ({
 
   return (
     <Card className="w-full grow max-w-3xl p-0 relative overflow-hidden rounded-lg shadow-xs gap-0 max-h-[calc(100vh-10.175rem)]">
-      {/* Sticky header */}
+      {/* Sticky header, z-11 is intentional */}
       <div className="sticky top-0 z-11 bg-card border-b flex items-center justify-between px-4 py-2 min-h-[40px]">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {transferPaths ? (
-            <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground min-w-0 flex-1">
-              <span
-                className="truncate min-w-0 flex-1 text-right"
-                title={transferPaths.source}
-              >
+            <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground min-w-0">
+              <span className="truncate min-w-0" title={transferPaths.source}>
                 {truncatePath(transferPaths.source)}
               </span>
               <ArrowRight
@@ -53,7 +50,7 @@ const LogViewer: React.FC<LogViewerProps> = ({
                 className="shrink-0 text-muted-foreground/50"
               />
               <span
-                className="truncate min-w-0 flex-1"
+                className="truncate min-w-0"
                 title={transferPaths.destination}
               >
                 {truncatePath(transferPaths.destination)}

@@ -135,11 +135,17 @@ const usePixelInternal = () => {
     }
   }, [activeOperation, transferPaths, terminal])
 
+  // Wrap clearLogs to also clear transfer context
+  const clearAll = useCallback(() => {
+    clearLogs()
+    setTransferPaths(null)
+  }, [clearLogs])
+
   return {
     isConnected,
     isRunning,
     logs,
-    clearLogs,
+    clearLogs: clearAll,
     logsEndRef,
     checkConnection,
     pushFiles,
