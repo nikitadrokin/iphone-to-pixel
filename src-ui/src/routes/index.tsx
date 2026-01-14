@@ -1,7 +1,14 @@
 import { useState, useCallback } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { open } from '@tauri-apps/plugin-dialog'
-import { File, Folder, Play, Spinner, Terminal } from '@phosphor-icons/react'
+import {
+  Clock,
+  File,
+  Folder,
+  Play,
+  Spinner,
+  Terminal,
+} from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 import { ItemGroup } from '@/components/ui/item'
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
@@ -156,6 +163,34 @@ function App() {
                   <Button
                     variant="outline"
                     onClick={() => pixel.convertInTerminal(selectedPaths)}
+                    disabled={pixel.isRunning}
+                  >
+                    <Terminal data-icon="inline-start" />
+                    {pixel.terminalName}
+                  </Button>
+                )}
+              </ActionItem>
+            )}
+
+            {/* Fix Dates */}
+            {hasSelection && !pixel.isRunning && (
+              <ActionItem
+                icon={<Clock size={24} weight="bold" />}
+                iconClass="text-muted-foreground"
+                title="Fix Dates"
+                description="Update file timestamps from EXIF metadata"
+              >
+                <Button
+                  variant="outline"
+                  onClick={() => pixel.fixDates(selectedPaths)}
+                  disabled={pixel.isRunning}
+                >
+                  Fix Dates
+                </Button>
+                {pixel.terminalReady && pixel.terminalName && (
+                  <Button
+                    variant="outline"
+                    onClick={() => pixel.fixDatesInTerminal(selectedPaths)}
                     disabled={pixel.isRunning}
                   >
                     <Terminal data-icon="inline-start" />

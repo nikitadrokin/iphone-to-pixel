@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { execa } from 'execa';
 import { logger } from '../utils/logger.js';
+import { fixDatesOnPhoto } from '../utils/dates.js';
 
 /**
  * Process an image file by copying it and fixing metadata dates
@@ -17,14 +17,7 @@ export async function processImage(
   // Copy file exactly
   await fs.copyFile(inputPath, outputPath);
 
-  // Fix filesystem dates to match EXIF DateTimeOriginal
+  // Fix filesystem dates using the priority chain from dates.ts
   // This ensures Google Photos sorts by capture date, not today
-  await execa('exiftool', [
-    '-quiet',
-    '-overwrite_original',
-    '-P',
-    '-FileModifyDate<DateTimeOriginal',
-    '-FileCreateDate<DateTimeOriginal',
-    outputPath,
-  ]);
+  await fixDatesOnPhoto(outputPath);
 }

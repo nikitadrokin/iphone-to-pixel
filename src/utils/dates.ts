@@ -77,3 +77,47 @@ export async function fixDatesInPlace(filePath: string): Promise<void> {
     filePath,
   ]);
 }
+
+/**
+ * Photo date tag priority chain (later tags override earlier ones):
+ * DateTimeDigitized -> CreateDate -> DateTimeOriginal
+ *
+ * Photos typically have different metadata tags than videos.
+ * DateTimeOriginal is the standard for when the photo was taken.
+ */
+const PHOTO_DATE_COPY_ARGS = [
+  // DateTimeDigitized (fallback - when the image was digitized)
+  '-FileCreateDate<DateTimeDigitized',
+  '-FileModifyDate<DateTimeDigitized',
+  // CreateDate (EXIF - when the image file was created)
+  '-FileCreateDate<CreateDate',
+  '-FileModifyDate<CreateDate',
+  // DateTimeOriginal (highest priority - when the photo was actually taken)
+  '-FileCreateDate<DateTimeOriginal',
+  '-FileModifyDate<DateTimeOriginal',
+];
+
+/**
+ * Fix dates on a photo file in-place using photo-specific metadata tags.
+ */
+export async function fixDatesOnPhoto(filePath: string): Promise<void> {
+  await execa('exiftool', [
+    '-quiet',
+    '-overwrite_original',
+    '-P',
+    ...PHOTO_DATE_COPY_ARGS,
+    filePath,
+  ]);
+}
+
+/**
+ * Check if a photo has a valid DateTimeOriginal
+ */
+export async function hasValidPhotoDate(filePath: string): Promise<boolean> {
+  const { stdout } = await execa('exiftool', [
+    '-s3',
+    '-DateTimeOriginal',
+    filePath,
+  ]);
+  return !!stdout.trim() && !stdout.includes('0000:00:00');
+}

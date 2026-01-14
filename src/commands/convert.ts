@@ -7,6 +7,7 @@ import { processVideo } from '../processors/video.js';
 import { processLegacyVideo } from '../processors/legacy-video.js';
 import { logger } from '../utils/logger.js';
 import { validateTools } from '../utils/validation.js';
+import { fixDatesOnPhoto } from '../utils/dates.js';
 
 const convertOptionsSchema = z.object({
   cwd: z.string(),
@@ -183,6 +184,8 @@ async function processFiles(
 
       try {
         await fs.access(outFile);
+        // Output already exists, but still fix its dates
+        await fixDatesOnPhoto(outFile);
         skippedCount++;
         continue;
       } catch {

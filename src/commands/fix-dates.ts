@@ -4,28 +4,41 @@ import { Command } from 'commander';
 import { z } from 'zod';
 import { logger } from '../utils/logger.js';
 import { validateTools } from '../utils/validation.js';
-import { fixDatesInPlace, hasValidCreateDate } from '../utils/dates.js';
+import {
+  fixDatesInPlace,
+  fixDatesOnPhoto,
+  hasValidCreateDate,
+  hasValidPhotoDate,
+} from '../utils/dates.js';
 
 const optionsSchema = z.object({
   cwd: z.string(),
+  jsonl: z.boolean().optional(),
 });
 
 const VIDEO_EXTENSIONS = ['mov', 'mp4', 'm4v', 'mpg', 'mpeg'];
+const IMAGE_EXTENSIONS = ['heic', 'heif', 'jpg', 'jpeg', 'png', 'gif', 'dng'];
 
 export const fixDates = new Command()
   .name('fix-dates')
-  .description('recover/fix creation dates on video files without remuxing')
+  .description('recover/fix creation dates on media files (photos and videos)')
   .argument('[paths...]', 'directories or files to fix', ['.'])
   .option(
     '-c, --cwd <cwd>',
     'the working directory. defaults to the current directory.',
     process.cwd(),
   )
+  .option('--jsonl', 'enable JSON output for UI integration')
   .action(async (paths: string[], opts) => {
     try {
       const options = optionsSchema.parse({
         cwd: path.resolve(opts.cwd),
+        jsonl: opts.jsonl,
       });
+
+      if (options.jsonl) {
+        logger.setMode('json');
+      }
 
       // resolve provided relative paths into absolute paths
       const resolvedPaths = paths.map((p) => path.resolve(options.cwd, p));
@@ -53,38 +66,46 @@ export const fixDates = new Command()
       const files = existingPaths.filter((p) => p.stat?.isFile());
       const directories = existingPaths.filter((p) => p.stat?.isDirectory());
 
-      // Collect all video files
+      // Collect all media files
       let videoFiles: string[] = [];
+      let imageFiles: string[] = [];
 
-      // collect video files from directories
+      // collect media files from directories
       for (const dir of directories) {
         const dirFiles = await fs.readdir(dir.path, { withFileTypes: true });
-        const videos = dirFiles
-          .filter((f) => {
-            if (!f.isFile() || f.name.startsWith('.')) return false;
-            const ext = path.extname(f.name).toLowerCase().slice(1);
-            return VIDEO_EXTENSIONS.includes(ext);
-          })
-          .map((f) => path.join(dir.path, f.name));
-        videoFiles.push(...videos);
+        for (const f of dirFiles) {
+          if (!f.isFile() || f.name.startsWith('.')) continue;
+          const ext = path.extname(f.name).toLowerCase().slice(1);
+          const filePath = path.join(dir.path, f.name);
+          if (VIDEO_EXTENSIONS.includes(ext)) {
+            videoFiles.push(filePath);
+          } else if (IMAGE_EXTENSIONS.includes(ext)) {
+            imageFiles.push(filePath);
+          }
+        }
       }
 
-      // collect video files if files were passed instead of directories
+      // collect media files if files were passed instead of directories
       for (const file of files) {
         const ext = path.extname(file.path).toLowerCase().slice(1);
         if (VIDEO_EXTENSIONS.includes(ext)) {
           videoFiles.push(file.path);
+        } else if (IMAGE_EXTENSIONS.includes(ext)) {
+          imageFiles.push(file.path);
         }
       }
 
-      if (videoFiles.length === 0) {
-        logger.error('No video files found.');
+      const totalFiles = videoFiles.length + imageFiles.length;
+      if (totalFiles === 0) {
+        logger.error('No media files found.');
         process.exit(1);
       }
 
       logger.break();
       logger.log('=========================================================');
-      logger.info(`Fixing dates on ${videoFiles.length} video file(s)`);
+      logger.info(
+        `Fixing dates on ${videoFiles.length} video(s) and ${imageFiles.length} photo(s)`,
+      );
       logger.log('=========================================================');
       logger.break();
 
@@ -94,6 +115,7 @@ export const fixDates = new Command()
       let alreadyOkCount = 0;
       let failedCount = 0;
 
+      // Process videos
       for (const file of videoFiles) {
         const baseName = path.basename(file);
 
@@ -109,6 +131,32 @@ export const fixDates = new Command()
 
         // Verify if it worked
         if (await hasValidCreateDate(file)) {
+          logger.success(`Fixed: ${baseName}`);
+          fixedCount++;
+        } else {
+          logger.warn(
+            `Could not recover date: ${baseName} - no valid source date found`,
+          );
+          failedCount++;
+        }
+      }
+
+      // Process photos
+      for (const file of imageFiles) {
+        const baseName = path.basename(file);
+
+        // Check if already has valid date
+        if (await hasValidPhotoDate(file)) {
+          logger.log(`${baseName}`);
+          alreadyOkCount++;
+          continue;
+        }
+
+        // Try to fix
+        await fixDatesOnPhoto(file);
+
+        // Verify if it worked
+        if (await hasValidPhotoDate(file)) {
           logger.success(`Fixed: ${baseName}`);
           fixedCount++;
         } else {

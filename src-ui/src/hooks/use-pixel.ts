@@ -9,7 +9,7 @@ export interface TransferPaths {
   destination: string
 }
 
-export type ActiveOperation = 'pull' | 'push' | 'convert' | null
+export type ActiveOperation = 'pull' | 'push' | 'convert' | 'fix-dates' | null
 
 const usePixelInternal = () => {
   const [isConnected, setIsConnected] = useState(false)
@@ -114,6 +114,26 @@ const usePixelInternal = () => {
     [terminal],
   )
 
+  const fixDates = useCallback(
+    async (paths: string[]) => {
+      if (paths.length === 0) return
+      setActiveOperation('fix-dates')
+      await execute(['fix-dates', ...paths], {
+        onFinish: () => setActiveOperation(null),
+      })
+    },
+    [execute],
+  )
+
+  const fixDatesInTerminal = useCallback(
+    async (paths: string[]) => {
+      if (paths.length === 0) return
+      // Open the native terminal with the itp fix-dates command
+      await terminal.openInTerminal('itp', ['fix-dates', ...paths])
+    },
+    [terminal],
+  )
+
   /** Open the current operation in native terminal */
   const openActiveInTerminal = useCallback(async () => {
     if (!transferPaths) return
@@ -154,6 +174,8 @@ const usePixelInternal = () => {
     shell,
     convert,
     convertInTerminal,
+    fixDates,
+    fixDatesInTerminal,
     terminalName: terminal.terminalName,
     terminalReady: terminal.isReady,
     // New exports
