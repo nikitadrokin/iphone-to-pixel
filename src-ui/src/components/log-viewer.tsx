@@ -9,10 +9,17 @@ interface LogViewerProps {
   emptyMessage?: string
 }
 
-/** Truncate a path to show only the last N segments */
+/** Truncate a path to show only the last N segments and shorten long filenames */
 const truncatePath = (path: string, segments: number = 2): string => {
   const parts = path.split('/')
-  if (parts.length <= segments) return path
+  const lastIdx = parts.length - 1
+  const filename = parts[lastIdx]
+
+  if (filename.length > 16) {
+    parts[lastIdx] = `${filename.slice(0, 7)}...${filename.slice(-7)}`
+  }
+
+  if (parts.length <= segments) return parts.join('/')
   return '.../' + parts.slice(-segments).join('/')
 }
 
@@ -31,12 +38,47 @@ const LogViewer: React.FC<LogViewerProps> = ({
   return (
     <Card className="w-full grow max-w-3xl p-0 relative overflow-hidden rounded-lg shadow-xs gap-0 max-h-[calc(100vh-10.175rem)]">
       {/* Sticky header */}
-      <div className="sticky top-0 z-10 bg-card border-b">
-        <div className="flex items-center justify-between px-4 py-2">
-          <div className="flex items-center gap-2 text-sm font-medium">
-            <Terminal size={16} className="text-muted-foreground" />
-            <span>Terminal Output</span>
-          </div>
+      <div className="sticky top-0 z-11 bg-card border-b flex items-center justify-between px-4 py-2 min-h-[40px]">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {transferPaths ? (
+            <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground min-w-0 flex-1">
+              <span
+                className="truncate min-w-0 flex-1 text-right"
+                title={transferPaths.source}
+              >
+                {truncatePath(transferPaths.source)}
+              </span>
+              <ArrowRight
+                size={12}
+                className="shrink-0 text-muted-foreground/50"
+              />
+              <span
+                className="truncate min-w-0 flex-1"
+                title={transferPaths.destination}
+              >
+                {truncatePath(transferPaths.destination)}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Terminal size={16} className="text-muted-foreground" />
+              <span>Terminal Output</span>
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          {openActiveInTerminal && terminalName && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={openActiveInTerminal}
+              className="h-6 text-xs text-muted-foreground"
+            >
+              <Terminal size={12} />
+              {terminalName}
+            </Button>
+          )}
+
           {clearLogs && logs.length > 0 && (
             <Button
               variant="ghost"
@@ -49,33 +91,8 @@ const LogViewer: React.FC<LogViewerProps> = ({
             </Button>
           )}
         </div>
-        {/* Transfer context sub-header */}
-        {transferPaths && (
-          <div className="flex items-center justify-between gap-2 px-4 py-2 border-t bg-muted/50">
-            <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground min-w-0">
-              <span className="truncate" title={transferPaths.source}>
-                {truncatePath(transferPaths.source)}
-              </span>
-              <ArrowRight size={12} className="shrink-0" />
-              <span className="truncate" title={transferPaths.destination}>
-                {truncatePath(transferPaths.destination)}
-              </span>
-            </div>
-            {openActiveInTerminal && terminalName && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={openActiveInTerminal}
-                className="h-6 text-xs shrink-0"
-              >
-                <Terminal size={12} />
-                {terminalName}
-              </Button>
-            )}
-          </div>
-        )}
       </div>
-      <ScrollArea className="grow p-4 font-mono text-sm before:top-[2.55rem]">
+      <ScrollArea className="grow p-4 font-mono text-sm before:top-10">
         {logs.length === 0 && (
           <span className="text-muted-foreground">{emptyMessage}</span>
         )}
