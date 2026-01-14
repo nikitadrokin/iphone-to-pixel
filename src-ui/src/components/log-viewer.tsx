@@ -29,7 +29,7 @@ const LogViewer: React.FC<LogViewerProps> = ({
   } = usePixel()
 
   return (
-    <Card className="w-full grow max-w-3xl p-0 relative overflow-hidden rounded-lg shadow-xs gap-0">
+    <Card className="w-full grow max-w-3xl p-0 relative overflow-hidden rounded-lg shadow-xs gap-0 max-h-[calc(100vh-10.175rem)]">
       {/* Sticky header */}
       <div className="sticky top-0 z-10 bg-card border-b">
         <div className="flex items-center justify-between px-4 py-2">
@@ -75,7 +75,7 @@ const LogViewer: React.FC<LogViewerProps> = ({
           </div>
         )}
       </div>
-      <ScrollArea className="grow p-4 font-mono text-sm before:top-[2.55rem] max-h-[400px]">
+      <ScrollArea className="grow p-4 font-mono text-sm before:top-[2.55rem]">
         {logs.length === 0 && (
           <span className="text-muted-foreground">{emptyMessage}</span>
         )}
