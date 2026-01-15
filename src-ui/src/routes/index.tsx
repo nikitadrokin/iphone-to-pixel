@@ -178,7 +178,7 @@ function App() {
                 icon={<Clock size={24} weight="bold" />}
                 iconClass="text-muted-foreground"
                 title="Fix Dates"
-                description="Update file timestamps from EXIF metadata"
+                description="Fix timestamps from EXIF or Google Takeout JSON"
               >
                 <Button
                   variant="outline"

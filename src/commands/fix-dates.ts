@@ -7,9 +7,11 @@ import { validateTools } from '../utils/validation.js';
 import {
   fixDatesInPlace,
   fixDatesOnPhoto,
+  fixDatesFromTimestamp,
   hasValidCreateDate,
   hasValidPhotoDate,
 } from '../utils/dates.js';
+import { findJsonSidecar, readPhotoTakenTime } from '../utils/json-sidecar.js';
 
 const optionsSchema = z.object({
   cwd: z.string(),
@@ -126,7 +128,21 @@ export const fixDates = new Command()
           continue;
         }
 
-        // Try to fix
+        // Priority 1: Try JSON sidecar (Google Takeout)
+        const jsonPath = await findJsonSidecar(file);
+        if (jsonPath) {
+          const timestamp = await readPhotoTakenTime(jsonPath);
+          if (timestamp) {
+            await fixDatesFromTimestamp(file, timestamp);
+            if (await hasValidCreateDate(file)) {
+              logger.success(`Fixed (from JSON): ${baseName}`);
+              fixedCount++;
+              continue;
+            }
+          }
+        }
+
+        // Priority 2: Try EXIF metadata
         await fixDatesInPlace(file);
 
         // Verify if it worked
@@ -152,7 +168,21 @@ export const fixDates = new Command()
           continue;
         }
 
-        // Try to fix
+        // Priority 1: Try JSON sidecar (Google Takeout)
+        const jsonPath = await findJsonSidecar(file);
+        if (jsonPath) {
+          const timestamp = await readPhotoTakenTime(jsonPath);
+          if (timestamp) {
+            await fixDatesFromTimestamp(file, timestamp);
+            if (await hasValidPhotoDate(file)) {
+              logger.success(`Fixed (from JSON): ${baseName}`);
+              fixedCount++;
+              continue;
+            }
+          }
+        }
+
+        // Priority 2: Try EXIF metadata
         await fixDatesOnPhoto(file);
 
         // Verify if it worked
