@@ -29,10 +29,6 @@ function AppSidebarWithContext() {
       isPixelConnected={pixel.isConnected}
       onCheckConnection={pixel.checkConnection}
       isRunning={pixel.isRunning}
-      onPushFolder={pixel.pushFolder}
-      onPushFiles={pixel.pushFiles}
-      onPull={pixel.pull}
-      onShell={pixel.shell}
     />
   )
 }

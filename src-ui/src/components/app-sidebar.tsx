@@ -1,14 +1,11 @@
 import { useEffect, useState } from 'react'
+import { useMatchRoute, useNavigate } from '@tanstack/react-router'
 import { getVersion } from '@tauri-apps/api/app'
 import {
   GithubLogo,
   DeviceMobile,
-  Export,
-  DownloadSimple,
   ArrowsClockwise,
-  Terminal,
-  Folder,
-  File,
+  FilmStrip,
 } from '@phosphor-icons/react'
 import {
   Sidebar,
@@ -24,7 +21,6 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
 import useIsFullscreen from '@/hooks/use-is-fullscreen'
 import { useIsMobile } from '@/hooks/use-mobile'
 
@@ -32,30 +28,27 @@ interface AppSidebarProps {
   isPixelConnected: boolean
   onCheckConnection: () => void
   isRunning: boolean
-  onPushFolder: () => void
-  onPushFiles: () => void
-  onPull: () => void
-  onShell: () => void
 }
 
 const AppSidebar: React.FC<AppSidebarProps> = ({
   isPixelConnected,
   onCheckConnection,
   isRunning,
-  onPushFolder,
-  onPushFiles,
-  onPull,
-  onShell,
 }) => {
   const [version, setVersion] = useState<string>('')
   const isFullscreen = useIsFullscreen()
   const isMobile = useIsMobile()
+  const matchRoute = useMatchRoute()
+  const navigate = useNavigate()
 
   useEffect(() => {
     getVersion()
       .then(setVersion)
       .catch(() => setVersion('dev'))
   }, [])
+
+  const isConvertActive = !!matchRoute({ to: '/convert', fuzzy: true })
+  const isTransferActive = !!matchRoute({ to: '/transfer', fuzzy: true })
 
   return (
     <Sidebar variant="floating">
@@ -72,9 +65,50 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       </SidebarHeader>
       <SidebarSeparator className="mt-2.5" />
       <SidebarContent>
-        {/* Connection Status */}
+        {/* Navigation */}
         <SidebarGroup>
-          <SidebarGroupLabel>Pixel Device</SidebarGroupLabel>
+          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={isConvertActive}
+                  tooltip="Convert media files for Pixel compatibility"
+                  onClick={() => navigate({ to: '/convert' })}
+                >
+                  <FilmStrip
+                    weight={isConvertActive ? 'duotone' : 'regular'}
+                    className={cn(isConvertActive && 'text-primary')}
+                  />
+                  <span>Convert Media</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={isTransferActive}
+                  tooltip="Push and pull files to/from your Pixel"
+                  onClick={() => navigate({ to: '/transfer' })}
+                >
+                  <DeviceMobile
+                    weight={isTransferActive ? 'duotone' : 'regular'}
+                    className={cn(
+                      isTransferActive
+                        ? 'text-primary'
+                        : isPixelConnected
+                          ? 'text-green-500'
+                          : 'text-muted-foreground',
+                    )}
+                  />
+                  <span>Pixel Transfer</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Device Status */}
+        <SidebarGroup>
+          <SidebarGroupLabel>Device</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -100,113 +134,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                       isRunning && 'animate-spin',
                     )}
                   />
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {/* Device Actions */}
-        <SidebarGroup>
-          <SidebarGroupLabel>Device Actions</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {/* Push to Pixel */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  disabled={!isPixelConnected || isRunning}
-                  data-disabled={!isPixelConnected || isRunning}
-                  tooltip={
-                    isPixelConnected
-                      ? 'Push files to /sdcard/DCIM/Camera'
-                      : 'Connect a Pixel device first'
-                  }
-                  className="data-[disabled=true]:hover:bg-inherit data-[disabled=true]:cursor-not-allowed data-[disabled=true]:text-muted-foreground"
-                >
-                  <div className="flex items-center gap-2">
-                    <Export
-                      className={cn(
-                        isPixelConnected
-                          ? 'text-green-500'
-                          : 'text-muted-foreground',
-                      )}
-                    />
-                    <span>Push to Pixel</span>
-                  </div>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Push sub-actions */}
-              {isPixelConnected && (
-                <div className="ml-6 flex gap-1 py-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onPushFolder}
-                    disabled={isRunning}
-                    className="h-7 text-xs"
-                  >
-                    <Folder className="h-3 w-3" />
-                    Folder
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onPushFiles}
-                    disabled={isRunning}
-                    className="h-7 text-xs"
-                  >
-                    <File className="h-3 w-3" />
-                    Files
-                  </Button>
-                </div>
-              )}
-
-              {/* Pull from Pixel */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={onPull}
-                  disabled={!isPixelConnected || isRunning}
-                  data-disabled={!isPixelConnected || isRunning}
-                  tooltip={
-                    isPixelConnected
-                      ? 'Download Camera folder to chosen directory'
-                      : 'Connect a Pixel device first'
-                  }
-                  className="data-[disabled=true]:hover:bg-inherit data-[disabled=true]:cursor-not-allowed data-[disabled=true]:text-muted-foreground"
-                >
-                  <DownloadSimple
-                    className={cn(
-                      isPixelConnected
-                        ? 'text-blue-500'
-                        : 'text-muted-foreground',
-                    )}
-                  />
-                  <span>Pull from Pixel</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {/* Launch Shell */}
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={onShell}
-                  disabled={!isPixelConnected || isRunning}
-                  data-disabled={!isPixelConnected || isRunning}
-                  tooltip={
-                    isPixelConnected
-                      ? 'Open an interactive ADB shell session'
-                      : 'Connect a Pixel device first'
-                  }
-                  className="data-[disabled=true]:hover:bg-inherit data-[disabled=true]:cursor-not-allowed data-[disabled=true]:text-muted-foreground"
-                >
-                  <Terminal
-                    className={cn(
-                      isPixelConnected
-                        ? 'text-purple-500'
-                        : 'text-muted-foreground',
-                    )}
-                  />
-                  <span>Launch Shell</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
