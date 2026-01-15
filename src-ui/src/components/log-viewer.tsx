@@ -1,27 +1,27 @@
-import { ArrowRight, Terminal, Trash } from '@phosphor-icons/react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-import ScrollArea from '@/components/ui/scroll-area'
-import { usePixel } from '@/contexts/pixel-context'
+import { ArrowRight, Terminal, Trash } from '@phosphor-icons/react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import ScrollArea from '@/components/ui/scroll-area';
+import { usePixel } from '@/contexts/pixel-context';
 
 interface LogViewerProps {
-  emptyMessage?: string
+  emptyMessage?: string;
 }
 
 /** Truncate a path to show only the last N segments and shorten long filenames */
 const truncatePath = (path: string, segments: number = 2): string => {
-  const parts = path.split('/')
-  const lastIdx = parts.length - 1
-  const filename = parts[lastIdx]
+  const parts = path.split('/');
+  const lastIdx = parts.length - 1;
+  const filename = parts[lastIdx];
 
   if (filename.length > 16) {
-    parts[lastIdx] = `${filename.slice(0, 7)}...${filename.slice(-7)}`
+    parts[lastIdx] = `${filename.slice(0, 7)}...${filename.slice(-7)}`;
   }
 
-  if (parts.length <= segments) return parts.join('/')
-  return '.../' + parts.slice(-segments).join('/')
-}
+  if (parts.length <= segments) return parts.join('/');
+  return '.../' + parts.slice(-segments).join('/');
+};
 
 const LogViewer: React.FC<LogViewerProps> = ({
   emptyMessage = 'Logs will appear here...',
@@ -33,7 +33,7 @@ const LogViewer: React.FC<LogViewerProps> = ({
     openActiveInTerminal,
     terminalName,
     clearLogs,
-  } = usePixel()
+  } = usePixel();
 
   return (
     <Card className="w-full grow max-w-3xl p-0 relative overflow-hidden rounded-lg shadow-xs gap-0 max-h-[calc(100vh-10.175rem)]">
@@ -64,7 +64,7 @@ const LogViewer: React.FC<LogViewerProps> = ({
           )}
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          {openActiveInTerminal && terminalName && (
+          {terminalName && (
             <Button
               variant="ghost"
               size="sm"
@@ -76,7 +76,7 @@ const LogViewer: React.FC<LogViewerProps> = ({
             </Button>
           )}
 
-          {clearLogs && logs.length > 0 && (
+          {logs.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -111,7 +111,7 @@ const LogViewer: React.FC<LogViewerProps> = ({
         <div ref={logsEndRef} />
       </ScrollArea>
     </Card>
-  )
-}
+  );
+};
 
-export default LogViewer
+export default LogViewer;

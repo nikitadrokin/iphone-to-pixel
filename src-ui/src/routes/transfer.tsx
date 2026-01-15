@@ -1,31 +1,34 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
 import {
-  DeviceMobile,
-  Export,
-  DownloadSimple,
-  Terminal,
   ArrowsClockwise,
+  DeviceMobile,
+  DownloadSimple,
+  Export,
   File,
   Folder,
-} from '@phosphor-icons/react'
-import { Button } from '@/components/ui/button'
-import { ItemGroup } from '@/components/ui/item'
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
-import LogViewer from '@/components/log-viewer'
-import ActionItem from '@/components/action-item'
-import { usePixel } from '@/contexts/pixel-context'
-import { useIsMobile } from '@/hooks/use-mobile'
-import { cn } from '@/lib/utils'
-import { Separator } from '@/components/ui/separator'
-import useIsFullscreen from '@/hooks/use-is-fullscreen'
+  Terminal,
+} from '@phosphor-icons/react';
+import { Button } from '@/components/ui/button';
+import { ButtonGroup } from '@/components/ui/button-group';
+import { ItemGroup } from '@/components/ui/item';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import LogViewer from '@/components/log-viewer';
+import ActionItem from '@/components/action-item';
+import { usePixel } from '@/contexts/pixel-context';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
+import useIsFullscreen from '@/hooks/use-is-fullscreen';
 
-export const Route = createFileRoute('/transfer')({ component: TransferPage })
+export const Route = createFileRoute('/transfer')({ component: TransferPage });
 
 function TransferPage() {
-  const pixel = usePixel()
-  const { open: sidebarOpen } = useSidebar()
-  const isMobile = useIsMobile()
-  const isFullscreen = useIsFullscreen()
+  const pixel = usePixel();
+  const { open: sidebarOpen } = useSidebar();
+  const isMobile = useIsMobile();
+  const isFullscreen = useIsFullscreen();
+
+  const isDisabled = pixel.isRunning || !pixel.isConnected;
 
   return (
     <>
@@ -79,82 +82,56 @@ function TransferPage() {
               </Button>
             </ActionItem>
 
-            {/* Push to Pixel */}
+            {/* Transfer Actions - Combined in one row */}
             <ActionItem
               icon={<Export size={24} weight="bold" />}
               iconClass={
                 pixel.isConnected ? 'text-green-500' : 'text-muted-foreground'
               }
-              title="Push to Pixel"
+              title="Transfer Files"
               description={
                 pixel.isConnected
-                  ? 'Push files to /sdcard/DCIM/Camera'
+                  ? 'Push files to or pull from your Pixel'
                   : 'Connect a Pixel device first'
               }
               disabled={!pixel.isConnected}
             >
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={pixel.pushFolder}
-                disabled={pixel.isRunning || !pixel.isConnected}
-              >
-                <Folder data-icon="inline-start" /> Folder
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={pixel.pushFiles}
-                disabled={pixel.isRunning || !pixel.isConnected}
-              >
-                <File data-icon="inline-start" /> Files
-              </Button>
-            </ActionItem>
-
-            {/* Pull from Pixel */}
-            <ActionItem
-              icon={<DownloadSimple size={24} weight="bold" />}
-              iconClass={
-                pixel.isConnected ? 'text-blue-500' : 'text-muted-foreground'
-              }
-              title="Pull from Pixel"
-              description={
-                pixel.isConnected
-                  ? 'Download Camera folder to chosen directory'
-                  : 'Connect a Pixel device first'
-              }
-              disabled={!pixel.isConnected}
-            >
-              <Button
-                variant="outline"
-                onClick={pixel.pull}
-                disabled={pixel.isRunning || !pixel.isConnected}
-              >
-                Pull
-              </Button>
-            </ActionItem>
-
-            {/* Launch Shell */}
-            <ActionItem
-              icon={<Terminal size={24} weight="bold" />}
-              iconClass={
-                pixel.isConnected ? 'text-purple-500' : 'text-muted-foreground'
-              }
-              title="Launch Shell"
-              description={
-                pixel.isConnected
-                  ? 'Open an interactive ADB shell session'
-                  : 'Connect a Pixel device first'
-              }
-              disabled={!pixel.isConnected}
-            >
-              <Button
-                variant="outline"
-                onClick={pixel.shell}
-                disabled={pixel.isRunning || !pixel.isConnected}
-              >
-                Open
-              </Button>
+              <ButtonGroup>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={pixel.pushFolder}
+                  disabled={isDisabled}
+                >
+                  <Folder data-icon="inline-start" /> Push Folder
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={pixel.pushFiles}
+                  disabled={isDisabled}
+                >
+                  <File data-icon="inline-start" /> Push Files
+                </Button>
+              </ButtonGroup>
+              <ButtonGroup>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={pixel.pull}
+                  disabled={isDisabled}
+                >
+                  <DownloadSimple data-icon="inline-start" /> Pull Camera
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={pixel.shell}
+                  disabled={isDisabled}
+                >
+                  <Terminal data-icon="inline-start" /> Shell
+                </Button>
+              </ButtonGroup>
             </ActionItem>
           </ItemGroup>
 
@@ -163,5 +140,5 @@ function TransferPage() {
         </div>
       </main>
     </>
-  )
+  );
 }

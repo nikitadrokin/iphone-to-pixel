@@ -1,13 +1,13 @@
-import { useIsMobile } from '@/hooks/use-mobile'
-import { cn } from '@/lib/utils'
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 type ScrollAreaProps = {
-  children: React.ReactNode
-  className?: string
-  gradientHeightTop?: string
-  gradientHeightBottom?: string
-  gradientColor?: string
-}
+  children: React.ReactNode;
+  className?: string;
+  gradientHeightTop?: string;
+  gradientHeightBottom?: string;
+  gradientColor?: string;
+};
 
 const ScrollArea: React.FC<ScrollAreaProps> = ({
   children,
@@ -16,7 +16,7 @@ const ScrollArea: React.FC<ScrollAreaProps> = ({
   gradientHeightBottom = '1rem',
   gradientColor = 'var(--background)',
 }) => {
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile();
 
   return (
     <div
@@ -39,7 +39,7 @@ const ScrollArea: React.FC<ScrollAreaProps> = ({
     >
       {children}
     </div>
-  )
-}
+  );
+};
 
-export default ScrollArea
+export default ScrollArea;

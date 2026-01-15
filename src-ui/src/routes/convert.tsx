@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
-import { open } from '@tauri-apps/plugin-dialog'
+import { useCallback, useState } from 'react';
+import { createFileRoute } from '@tanstack/react-router';
+import { open } from '@tauri-apps/plugin-dialog';
 import {
   Clock,
   File,
@@ -8,45 +8,45 @@ import {
   Play,
   Spinner,
   Terminal,
-} from '@phosphor-icons/react'
-import { Button } from '@/components/ui/button'
-import { ItemGroup } from '@/components/ui/item'
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
-import DropzoneOverlay from '@/components/dropzone-overlay'
-import LogViewer from '@/components/log-viewer'
-import PathList from '@/components/path-list'
-import ActionItem from '@/components/action-item'
-import { useDragDrop } from '@/hooks/use-drag-drop'
-import { usePixel } from '@/contexts/pixel-context'
+} from '@phosphor-icons/react';
+import { Button } from '@/components/ui/button';
+import { ItemGroup } from '@/components/ui/item';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import DropzoneOverlay from '@/components/dropzone-overlay';
+import LogViewer from '@/components/log-viewer';
+import PathList from '@/components/path-list';
+import ActionItem from '@/components/action-item';
+import { useDragDrop } from '@/hooks/use-drag-drop';
+import { usePixel } from '@/contexts/pixel-context';
 import {
   ALL_EXTENSIONS,
   IMAGE_EXTENSIONS,
   VIDEO_EXTENSIONS,
-} from '@/lib/constants'
-import { useIsMobile } from '@/hooks/use-mobile'
-import { cn } from '@/lib/utils'
-import { Separator } from '@/components/ui/separator'
-import useIsFullscreen from '@/hooks/use-is-fullscreen'
+} from '@/lib/constants';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
+import useIsFullscreen from '@/hooks/use-is-fullscreen';
 
-export const Route = createFileRoute('/convert')({ component: ConvertPage })
+export const Route = createFileRoute('/convert')({ component: ConvertPage });
 
 function ConvertPage() {
-  const [selectedPaths, setSelectedPaths] = useState<string[]>([])
-  const pixel = usePixel()
-  const { open: sidebarOpen } = useSidebar()
-  const isMobile = useIsMobile()
-  const isFullscreen = useIsFullscreen()
+  const [selectedPaths, setSelectedPaths] = useState<Array<string>>([]);
+  const pixel = usePixel();
+  const { open: sidebarOpen } = useSidebar();
+  const isMobile = useIsMobile();
+  const isFullscreen = useIsFullscreen();
 
-  const hasSelection = selectedPaths.length > 0
+  const hasSelection = selectedPaths.length > 0;
 
   // Drag and drop
   const { isDragging } = useDragDrop({
     extensions: ALL_EXTENSIONS,
     onDrop: (paths) => {
-      setSelectedPaths(paths)
-      pixel.clearLogs()
+      setSelectedPaths(paths);
+      pixel.clearLogs();
     },
-  })
+  });
 
   // File/folder selection for conversion
   const selectFiles = useCallback(async () => {
@@ -60,26 +60,26 @@ function ConvertPage() {
         },
       ],
       title: 'Select Photos/Videos',
-    })
+    });
     if (selected) {
-      setSelectedPaths(Array.isArray(selected) ? selected : [selected])
-      pixel.clearLogs()
+      setSelectedPaths(Array.isArray(selected) ? selected : [selected]);
+      pixel.clearLogs();
     }
-  }, [pixel])
+  }, [pixel]);
 
   const selectFolder = useCallback(async () => {
     const selected = await open({
       directory: true,
       multiple: false,
       title: 'Select Directory',
-    })
+    });
     if (selected && typeof selected === 'string') {
-      setSelectedPaths([selected])
-      pixel.clearLogs()
+      setSelectedPaths([selected]);
+      pixel.clearLogs();
     }
-  }, [pixel])
+  }, [pixel]);
 
-  const clearSelection = useCallback(() => setSelectedPaths([]), [])
+  const clearSelection = useCallback(() => setSelectedPaths([]), []);
 
   return (
     <>
@@ -205,5 +205,5 @@ function ConvertPage() {
         </div>
       </main>
     </>
-  )
+  );
 }

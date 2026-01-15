@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react'
-import { useMatchRoute, useNavigate } from '@tanstack/react-router'
-import { getVersion } from '@tauri-apps/api/app'
+import { useEffect, useState } from 'react';
+import { useMatchRoute, useNavigate } from '@tanstack/react-router';
+import { getVersion } from '@tauri-apps/api/app';
 import {
-  GithubLogo,
-  DeviceMobile,
   ArrowsClockwise,
+  DeviceMobile,
   FilmStrip,
-} from '@phosphor-icons/react'
+  GithubLogo,
+} from '@phosphor-icons/react';
 import {
   Sidebar,
   SidebarContent,
@@ -19,15 +19,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-} from '@/components/ui/sidebar'
-import { cn } from '@/lib/utils'
-import useIsFullscreen from '@/hooks/use-is-fullscreen'
-import { useIsMobile } from '@/hooks/use-mobile'
+} from '@/components/ui/sidebar';
+import { cn } from '@/lib/utils';
+import useIsFullscreen from '@/hooks/use-is-fullscreen';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface AppSidebarProps {
-  isPixelConnected: boolean
-  onCheckConnection: () => void
-  isRunning: boolean
+  isPixelConnected: boolean;
+  onCheckConnection: () => void;
+  isRunning: boolean;
 }
 
 const AppSidebar: React.FC<AppSidebarProps> = ({
@@ -35,20 +35,20 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
   onCheckConnection,
   isRunning,
 }) => {
-  const [version, setVersion] = useState<string>('')
-  const isFullscreen = useIsFullscreen()
-  const isMobile = useIsMobile()
-  const matchRoute = useMatchRoute()
-  const navigate = useNavigate()
+  const [version, setVersion] = useState<string>('');
+  const isFullscreen = useIsFullscreen();
+  const isMobile = useIsMobile();
+  const matchRoute = useMatchRoute();
+  const navigate = useNavigate();
 
   useEffect(() => {
     getVersion()
       .then(setVersion)
-      .catch(() => setVersion('dev'))
-  }, [])
+      .catch(() => setVersion('dev'));
+  }, []);
 
-  const isConvertActive = !!matchRoute({ to: '/convert', fuzzy: true })
-  const isTransferActive = !!matchRoute({ to: '/transfer', fuzzy: true })
+  const isConvertActive = !!matchRoute({ to: '/convert', fuzzy: true });
+  const isTransferActive = !!matchRoute({ to: '/transfer', fuzzy: true });
 
   return (
     <Sidebar variant="floating">
@@ -171,7 +171,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         </div>
       </SidebarFooter>
     </Sidebar>
-  )
-}
+  );
+};
 
-export default AppSidebar
+export default AppSidebar;

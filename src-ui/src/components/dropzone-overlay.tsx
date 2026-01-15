@@ -1,15 +1,15 @@
-import { UploadSimple } from '@phosphor-icons/react'
+import { UploadSimple } from '@phosphor-icons/react';
 
 interface DropzoneOverlayProps {
-  isVisible: boolean
-  extensions: string[]
+  isVisible: boolean;
+  extensions: Array<string>;
 }
 
 const DropzoneOverlay: React.FC<DropzoneOverlayProps> = ({
   isVisible,
   extensions,
 }) => {
-  if (!isVisible) return null
+  if (!isVisible) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
@@ -23,7 +23,7 @@ const DropzoneOverlay: React.FC<DropzoneOverlayProps> = ({
         </p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default DropzoneOverlay
+export default DropzoneOverlay;
