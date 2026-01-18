@@ -25,8 +25,11 @@ export interface GooglePhotosJSON {
 /**
  * Find the JSON sidecar file for a media file.
  * Google Takeout creates sidecars with various naming patterns:
- * - photo.jpg → photo.jpg.json
- * - photo.jpg → photo.json (less common)
+ * - photo.jpg → photo.jpg.supplemental-metadata.json (most common)
+ * - photo.jpg → photo.jpg.suppl.json (shortened variant)
+ * - photo.jpg → photo.jpg.supplemental.json (another variant)
+ * - photo.jpg → photo.jpg.json (less common, older exports)
+ * - photo.jpg → photo.json (rare, filename without extension)
  */
 export async function findJsonSidecar(
   mediaPath: string,
@@ -34,16 +37,25 @@ export async function findJsonSidecar(
   const dir = path.dirname(mediaPath);
   const basename = path.basename(mediaPath);
 
-  // Primary pattern: filename.ext.json
-  const primarySidecar = path.join(dir, `${basename}.json`);
-  try {
-    await fs.access(primarySidecar);
-    return primarySidecar;
-  } catch {
-    // File doesn't exist, try alternative
+  // Check patterns in order of likelihood
+  const patterns = [
+    `${basename}.supplemental-metadata.json`, // Most common Google Takeout format
+    `${basename}.suppl.json`, // Shortened variant
+    `${basename}.supplemental.json`, // Another variant
+    `${basename}.json`, // Legacy format
+  ];
+
+  for (const pattern of patterns) {
+    const sidecarPath = path.join(dir, pattern);
+    try {
+      await fs.access(sidecarPath);
+      return sidecarPath;
+    } catch {
+      // Continue to next pattern
+    }
   }
 
-  // Alternative pattern: filename.json (without extension)
+  // Fallback: filename.json (without extension) - rare
   const nameWithoutExt = path.basename(mediaPath, path.extname(mediaPath));
   const altSidecar = path.join(dir, `${nameWithoutExt}.json`);
   try {
