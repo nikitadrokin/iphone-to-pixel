@@ -6,6 +6,7 @@ import {
   DeviceMobile,
   FilmStrip,
   GithubLogo,
+  RoadHorizon,
 } from '@phosphor-icons/react';
 import {
   Sidebar,
@@ -49,6 +50,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
 
   const isConvertActive = !!matchRoute({ to: '/convert', fuzzy: true });
   const isTransferActive = !!matchRoute({ to: '/transfer', fuzzy: true });
+  const isRoadmapActive = !!matchRoute({ to: '/roadmap', fuzzy: true });
 
   return (
     <Sidebar variant="floating">
@@ -100,6 +102,19 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                     )}
                   />
                   <span>Pixel Transfer</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={isRoadmapActive}
+                  tooltip="View planned and upcoming features"
+                  onClick={() => navigate({ to: '/roadmap' })}
+                >
+                  <RoadHorizon
+                    weight={isRoadmapActive ? 'duotone' : 'regular'}
+                    className={cn(isRoadmapActive && 'text-primary')}
+                  />
+                  <span>Roadmap</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
