@@ -24,6 +24,7 @@ import {
 import { cn } from '@/lib/utils';
 import useIsFullscreen from '@/hooks/use-is-fullscreen';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 interface AppSidebarProps {
   isPixelConnected: boolean;
@@ -157,7 +158,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
       </SidebarContent>
 
       <SidebarFooter className="p-4">
-        <div className="flex flex-col gap-2 text-xs text-muted-foreground">
+        <div className="flex flex-col gap-3 text-xs text-muted-foreground">
+          <ThemeToggle />
           <div className="flex items-center justify-between">
             <span>
               Made with 🫶🏻 by{' '}
@@ -170,19 +172,20 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                 Nikita
               </a>
             </span>
-            {version && (
-              <span className="text-muted-foreground">v{version}</span>
-            )}
+            <div className="flex items-center gap-2">
+              <a
+                href="https://github.com/nikitadrokin/iphone-to-pixel"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-primary hover:underline"
+              >
+                <GithubLogo size={14} />
+              </a>
+              {version && (
+                <span className="text-muted-foreground">v{version}</span>
+              )}
+            </div>
           </div>
-          <a
-            href="https://github.com/nikitadrokin/iphone-to-pixel"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-primary hover:underline"
-          >
-            <GithubLogo size={14} />
-            View on GitHub
-          </a>
         </div>
       </SidebarFooter>
     </Sidebar>

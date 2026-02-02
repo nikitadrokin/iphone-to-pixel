@@ -14,7 +14,7 @@ const ScrollArea: React.FC<ScrollAreaProps> = ({
   className,
   gradientHeightTop = '1rem',
   gradientHeightBottom = '1rem',
-  gradientColor = 'var(--background)',
+  gradientColor = 'var(--card)',
 }) => {
   const isMobile = useIsMobile();
 
