@@ -32,6 +32,8 @@ interface AppSidebarProps {
   isRunning: boolean;
 }
 
+const isDev = import.meta.env.DEV;
+
 const AppSidebar: React.FC<AppSidebarProps> = ({
   isPixelConnected,
   onCheckConnection,
@@ -105,19 +107,23 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
                   <span>Pixel Transfer</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  isActive={isRoadmapActive}
-                  tooltip="View planned and upcoming features"
-                  onClick={() => navigate({ to: '/roadmap' })}
-                >
-                  <RoadHorizon
-                    weight={isRoadmapActive ? 'duotone' : 'regular'}
-                    className={cn(isRoadmapActive && 'text-primary')}
-                  />
-                  <span>Roadmap</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {isDev && (
+                <>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={isRoadmapActive}
+                      tooltip="View planned and upcoming features"
+                      onClick={() => navigate({ to: '/roadmap' })}
+                    >
+                      <RoadHorizon
+                        weight={isRoadmapActive ? 'duotone' : 'regular'}
+                        className={cn(isRoadmapActive && 'text-primary')}
+                      />
+                      <span>Roadmap</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
