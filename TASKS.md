@@ -41,3 +41,15 @@
 
 - [ ] **26. Auto-Update Mechanism** - Integrate Tauri's built-in auto-updater
 - [ ] **27. Dependency Checker UI** - Show status of ffmpeg/exiftool in sidebar with install instructions
+
+## 🎭 User Personas & Modes
+
+- [ ] **28. UI Classification System** - Distinct interfaces for different user types:
+  - **Easy User**: Simplified "Transfer to Done" single-button interface.
+  - **Power User**: Standard full-featured UI with granular controls.
+  - **Developer**: Advanced mode with direct terminal access and deeper system visibility.
+
+- [ ] **29. Developer Mode: Shell Emulation** - Replicate a "Pixel Shell" navigation experience:
+  - **Action-to-Terminal Mapping**: Every UI action (e.g., navigating SD card, DCIM) automatically opens/updates an interactive terminal window.
+  - **Real-time Interaction**: Allow users to interact with the shell and file system directly during the flow.
+  - **Command Transparency**: Show the exact underlying commands being executed in real-time.
