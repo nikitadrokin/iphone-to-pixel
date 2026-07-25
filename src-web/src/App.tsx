@@ -30,8 +30,10 @@ function CopyButton({ text }: { text: string }) {
 
   return (
     <button
+      aria-label={`Copy install command: ${text}`}
       onClick={handleCopy}
       className='group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-5 py-3.5 text-left font-mono text-sm text-white/80 transition hover:border-white/20 hover:bg-white/10 hover:text-white'
+      type='button'
     >
       <span className='flex-1'>{text}</span>
       <svg
@@ -75,13 +77,19 @@ export default function App() {
       {/* Hero */}
       <main className='mx-auto max-w-5xl px-6 pb-32 pt-20 text-center'>
         <h1 className='mx-auto mb-6 text-5xl font-semibold tracking-tight text-white sm:text-6xl'>
-          Free Unlimited Google Photos
+          Prepare iPhone media for an original Pixel
         </h1>
 
-        <p className='mx-auto mb-12 max-w-xl text-lg text-white/50'>
-          PhotoBridge leverages Google's policy for free unlimited storage of
-          photos and videos at original quality. Simply convert your photos to
-          an Android format and upload them at no cost!
+        <p className='mx-auto mb-5 max-w-2xl text-lg leading-relaxed text-white/50'>
+          PhotoBridge is a free, open-source macOS app and CLI for the iPhone →
+          original Pixel → Google Photos workflow. Convert HEIC photos to JPG,
+          remux MOV/HEVC videos to MP4, and preserve capture dates while keeping
+          your originals untouched.
+        </p>
+        <p className='mx-auto mb-12 max-w-2xl text-sm leading-relaxed text-white/35'>
+          Use your own eligible Pixel hardware and the official Google Photos
+          app. Storage benefits depend on the device and its Google Photos
+          terms.
         </p>
 
         <div className='mx-auto mb-4 max-w-md'>
@@ -102,6 +110,14 @@ export default function App() {
 
       {/* Features */}
       <section className='mx-auto max-w-5xl px-6 pb-32'>
+        <div className='mb-8 text-left'>
+          <p className='mb-3 text-xs font-medium uppercase tracking-[0.18em] text-white/35'>
+            What it handles
+          </p>
+          <h2 className='text-2xl font-semibold tracking-tight text-white sm:text-3xl'>
+            Built for iPhone-to-Pixel libraries
+          </h2>
+        </div>
         <div className='grid gap-px rounded-2xl border border-white/10 bg-white/10 overflow-hidden sm:grid-cols-2'>
           {features.map((f) => (
             <div key={f.title} className='bg-zinc-950 p-8'>
@@ -116,9 +132,44 @@ export default function App() {
         </div>
       </section>
 
+      <section className='mx-auto max-w-3xl px-6 pb-32'>
+        <h2 className='mb-8 text-2xl font-semibold tracking-tight text-white sm:text-3xl'>
+          How PhotoBridge fits the workflow
+        </h2>
+        <div className='space-y-8 text-left'>
+          <article>
+            <h3 className='mb-2 text-sm font-semibold text-white'>
+              Does PhotoBridge upload directly to Google Photos?
+            </h3>
+            <p className='text-sm leading-relaxed text-white/50'>
+              No. It prepares media locally on your Mac and helps move it to
+              real Pixel hardware. The official Google Photos app on that
+              device handles the backup.
+            </p>
+          </article>
+          <article>
+            <h3 className='mb-2 text-sm font-semibold text-white'>
+              What happens to the original files?
+            </h3>
+            <p className='text-sm leading-relaxed text-white/50'>
+              Nothing is overwritten. PhotoBridge writes converted output
+              separately and carries important capture-time metadata forward
+              so your Google Photos timeline stays in order.
+            </p>
+          </article>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className='border-t border-white/5 px-6 py-8 text-center text-xs text-white/25'>
-        MIT License ·{' '}
+        Built by{' '}
+        <a
+          href='https://nikitadrokin.com/'
+          className='transition hover:text-white/50'
+        >
+          Nikita Drokin
+        </a>{' '}
+        · MIT License ·{' '}
         <a
           href='https://github.com/nikitadrokin/photo-bridge'
           target='_blank'

@@ -3,11 +3,105 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Convert iOS media files for Pixel compatibility. HEIC to JPG, MOV to MP4 — without losing quality or metadata." />
-    <title>PhotoBridge</title>
+    <title>PhotoBridge — Prepare iPhone Media for Google Pixel</title>
+    <meta
+      name="description"
+      content="Free, open-source macOS app and CLI for preparing iPhone photos and videos for an original Google Pixel. Convert HEIC to JPG, remux MOV/HEVC to MP4, and preserve capture dates."
+    />
+    <meta name="author" content="Nikita Drokin" />
+    <meta
+      name="robots"
+      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+    />
+    <meta name="theme-color" content="#09090b" />
+    <link rel="canonical" href="https://photobridge.nkdr.me/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content="PhotoBridge" />
+    <meta
+      property="og:title"
+      content="PhotoBridge — Prepare iPhone Media for Google Pixel"
+    />
+    <meta
+      property="og:description"
+      content="Convert HEIC to JPG, remux MOV/HEVC to MP4, preserve capture dates, and move iPhone media through your original Pixel."
+    />
+    <meta property="og:url" content="https://photobridge.nkdr.me/" />
+    <meta name="twitter:card" content="summary" />
+    <meta
+      name="twitter:title"
+      content="PhotoBridge — Prepare iPhone Media for Google Pixel"
+    />
+    <meta
+      name="twitter:description"
+      content="A free macOS app and CLI for the iPhone → original Pixel → Google Photos workflow."
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "PhotoBridge",
+        "url": "https://photobridge.nkdr.me/",
+        "description": "A free, open-source macOS app and CLI that prepares iPhone photos and videos for original Google Pixel workflows.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "macOS",
+        "isAccessibleForFree": true,
+        "downloadUrl": "https://github.com/nikitadrokin/photo-bridge/releases/latest",
+        "license": "https://opensource.org/license/mit",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "Nikita Drokin",
+          "url": "https://nikitadrokin.com/"
+        }
+      }
+    </script>
+    <style>
+      html {
+        background: #09090b;
+        color: #fff;
+        font-family: Inter, system-ui, -apple-system, sans-serif;
+      }
+      .initial-content {
+        box-sizing: border-box;
+        margin: 0 auto;
+        max-width: 64rem;
+        padding: 8rem 1.5rem;
+        text-align: center;
+      }
+      .initial-content h1 {
+        font-size: clamp(2.75rem, 7vw, 4rem);
+        letter-spacing: -0.04em;
+        line-height: 1.05;
+        margin: 0 auto 1.5rem;
+        max-width: 52rem;
+      }
+      .initial-content p {
+        color: rgba(255, 255, 255, 0.55);
+        font-size: 1.125rem;
+        line-height: 1.7;
+        margin: 0 auto;
+        max-width: 42rem;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main class="initial-content">
+        <h1>Prepare iPhone media for an original Google Pixel</h1>
+        <p>
+          PhotoBridge converts HEIC photos to JPG, remuxes MOV/HEVC videos to
+          MP4, and preserves capture dates for Pixel-based Google Photos
+          workflows.
+        </p>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
