@@ -1,7 +1,11 @@
 import { promises as fs } from 'node:fs';
 import { execa } from 'execa';
 import { resolveTool } from '../utils/tool-paths';
-import { copyDatesFromSource } from '../utils/dates.js';
+import {
+  copyDatesFromSource,
+  fixDatesFromFilesystemFallback,
+  hasValidCreateDate,
+} from '../utils/dates.js';
 
 interface CodecInfo {
   audio: string;
@@ -89,6 +93,11 @@ export async function processVideo(
 
   try {
     await copyDatesFromSource(inputPath, outputPath);
+    // Downloaded/recorded videos with no embedded capture date: fall back to
+    // the source file's filesystem date so uploads don't default to today.
+    if (!(await hasValidCreateDate(outputPath))) {
+      await fixDatesFromFilesystemFallback(outputPath, inputPath);
+    }
   } catch {
     // Conversion succeeded; date repair can be reported by fix-dates later.
   }

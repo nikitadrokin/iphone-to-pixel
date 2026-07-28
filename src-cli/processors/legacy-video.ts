@@ -1,7 +1,11 @@
 import { promises as fs } from 'node:fs';
 import { execa } from 'execa';
 import { resolveTool } from '../utils/tool-paths';
-import { copyDatesFromSource } from '../utils/dates.js';
+import {
+  copyDatesFromSource,
+  fixDatesFromFilesystemFallback,
+  hasValidCreateDate,
+} from '../utils/dates.js';
 
 /** Transcodes legacy MPEG-style inputs into H.264/AAC MP4 for Pixel playback. */
 export async function processLegacyVideo(
@@ -42,4 +46,9 @@ export async function processLegacyVideo(
   }
 
   await copyDatesFromSource(inputPath, outputPath);
+  // Legacy sources often carry no embedded dates at all: fall back to the
+  // source file's filesystem date so uploads don't default to today.
+  if (!(await hasValidCreateDate(outputPath))) {
+    await fixDatesFromFilesystemFallback(outputPath, inputPath);
+  }
 }
