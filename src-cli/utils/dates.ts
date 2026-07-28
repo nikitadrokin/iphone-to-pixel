@@ -56,7 +56,11 @@ const DATE_COPY_ARGS = [
  * Check if a file has a valid CreateDate
  */
 export async function hasValidCreateDate(filePath: string): Promise<boolean> {
-  const { stdout } = await execa(resolveTool('exiftool'), ['-s3', '-CreateDate', filePath]);
+  const { stdout } = await execa(resolveTool('exiftool'), [
+    '-s3',
+    '-CreateDate',
+    filePath,
+  ]);
   return isUsableExifDateValue(stdout);
 }
 
@@ -297,7 +301,16 @@ export interface MediaDateInspectResult {
   readonly candidates: readonly MediaDateCandidate[];
 }
 
-const INSPECT_VIDEO_EXT = new Set(['mov', 'mp4', 'm4v', 'mpg', 'mpeg']);
+// m4a/3gp are QuickTime-family containers: the video date chain applies as-is.
+const INSPECT_VIDEO_EXT = new Set([
+  'mov',
+  'mp4',
+  'm4v',
+  'mpg',
+  'mpeg',
+  'm4a',
+  '3gp',
+]);
 const INSPECT_IMAGE_EXT = new Set([
   'heic',
   'heif',
@@ -497,15 +510,12 @@ export async function fixDatesFromTimestamp(
   filePath: string,
   timestamp: number,
 ): Promise<void> {
-  // Convert Unix seconds to exiftool datetime format: "YYYY:MM:DD HH:MM:SS"
-  const date = new Date(timestamp * 1000);
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-  const exifDate = `${year}:${month}:${day} ${hours}:${minutes}:${seconds}`;
+  // Local-time exiftool datetime string ("YYYY:MM:DD HH:MM:SS"). With `-api
+  // QuickTimeUTC`, exiftool interprets a naive input value as local time and
+  // converts it to UTC when storing QuickTime tags; EXIF tags store it as-is
+  // (local), which matches EXIF convention. Formatting in UTC here would
+  // double-shift the QuickTime dates by the timezone offset.
+  const exifDate = formatExifLocalDate(timestamp);
 
   await execa(resolveTool('exiftool'), [
     '-overwrite_original',
@@ -516,8 +526,75 @@ export async function fixDatesFromTimestamp(
     `-CreateDate=${exifDate}`,
     `-DateCreated=${exifDate}`,
     `-ModifyDate=${exifDate}`,
+    `-Track*Date=${exifDate}`,
+    `-Media*Date=${exifDate}`,
     `-FileCreateDate=${exifDate}`,
     `-FileModifyDate=${exifDate}`,
     filePath,
   ]);
+}
+
+/** Unix seconds -> local-time exiftool datetime string ("YYYY:MM:DD HH:MM:SS"). */
+function formatExifLocalDate(unixSeconds: number): string {
+  const date = new Date(unixSeconds * 1000);
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  const hour = pad(date.getHours());
+  const minute = pad(date.getMinutes());
+  const second = pad(date.getSeconds());
+
+  return `${year}:${month}:${day} ${hour}:${minute}:${second}`;
+}
+
+/**
+ * Oldest usable filesystem timestamp (birthtime vs mtime) as a last-resort
+ * capture date. Uses the minimum because copies get a fresh birthtime while
+ * `mtime` usually survives, and vice versa for edited-in-place files.
+ */
+export async function readFilesystemFallbackUnixSeconds(
+  filePath: string,
+): Promise<number | null> {
+  const stat = await fs.stat(filePath);
+  const candidates = [stat.birthtimeMs, stat.mtimeMs]
+    .map((ms) => Math.floor(ms / 1000))
+    .filter((s) => s > 0);
+  if (candidates.length === 0) return null;
+  return Math.min(...candidates);
+}
+
+/**
+ * Separate fallback for files with no usable embedded capture date —
+ * screenshots, audio recordings, and videos downloaded from the internet.
+ * Writes the oldest filesystem date of `sourcePath` (defaults to the file
+ * itself) into the embedded date tags of `targetPath`, so services that only
+ * honor embedded metadata (e.g. Google Photos) don't default to the upload
+ * day. Callers must only invoke this after the embedded-date chain found
+ * nothing, so it never interferes with real capture dates.
+ */
+export async function fixDatesFromFilesystemFallback(
+  targetPath: string,
+  sourcePath: string = targetPath,
+): Promise<boolean> {
+  const unixSeconds = await readFilesystemFallbackUnixSeconds(sourcePath);
+  if (unixSeconds === null) return false;
+  await fixDatesFromTimestamp(targetPath, unixSeconds);
+  return true;
+}
+
+/**
+ * For formats exiftool cannot write (e.g. mp3/wav audio): restore only the
+ * filesystem modification time to the oldest known filesystem date.
+ */
+export async function fixFilesystemDatesOnly(
+  targetPath: string,
+  sourcePath: string = targetPath,
+): Promise<boolean> {
+  const unixSeconds = await readFilesystemFallbackUnixSeconds(sourcePath);
+  if (unixSeconds === null) return false;
+  const when = new Date(unixSeconds * 1000);
+  await fs.utimes(targetPath, when, when);
+  return true;
 }
