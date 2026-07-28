@@ -118,7 +118,12 @@ export async function copyPathsToSiblingDirectories(
     const destinationRoot = await prepareSiblingDirectory(sourceRoot, suffix, {
       conflictMode: 'next-available',
     });
-    await fs.cp(sourceRoot, destinationRoot, { recursive: true });
+
+    await fs.cp(sourceRoot, destinationRoot, {
+      recursive: true,
+      // IMPORTANT: preserve the timestamp of original creation
+      preserveTimestamps: true,
+    });
     roots.push({ sourcePath: sourceRoot, destinationPath: destinationRoot });
     destinationBySource.set(sourceRoot, destinationRoot);
   }
