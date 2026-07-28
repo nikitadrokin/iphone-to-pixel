@@ -9,15 +9,27 @@ import {
 } from '../utils/sibling-directory.js';
 import { validateTools } from '../utils/validation.js';
 import {
+  fixDatesFromFilesystemFallback,
   fixDatesInPlace,
   fixDatesOnPhoto,
   fixDatesFromTimestamp,
+  fixFilesystemDatesOnly,
   hasValidCreateDate,
   inspectMediaDates,
   photoEmbeddedFileDatesAlreadyOk,
 } from '../utils/dates.js';
 
-const VIDEO_EXTENSIONS = new Set(['mov', 'mp4', 'm4v', 'mpg', 'mpeg']);
+// m4a/3gp are QuickTime-family containers, so the video date chain applies.
+const VIDEO_EXTENSIONS = new Set([
+  'mov',
+  'mp4',
+  'm4v',
+  'mpg',
+  'mpeg',
+  'm4a',
+  '3gp',
+]);
+
 const IMAGE_EXTENSIONS = new Set([
   'heic',
   'heif',
@@ -26,6 +38,19 @@ const IMAGE_EXTENSIONS = new Set([
   'png',
   'gif',
   'dng',
+  'webp',
+]);
+
+// Formats exiftool cannot write embedded dates into; only filesystem dates
+// can be restored for these.
+const AUDIO_ONLY_EXTENSIONS = new Set([
+  'mp3',
+  'wav',
+  'aiff',
+  'aif',
+  'amr',
+  'ogg',
+  'flac',
 ]);
 
 type ExistingPath = {
@@ -42,9 +67,10 @@ interface WorkingPaths {
 /** Recursively collect media files from `dirPath`, sorted into video/image buckets. */
 async function collectMediaFiles(
   dirPath: string,
-): Promise<{ videos: string[]; images: string[] }> {
+): Promise<{ videos: string[]; images: string[]; audio: string[] }> {
   const videos: string[] = [];
   const images: string[] = [];
+  const audio: string[] = [];
 
   async function walk(dir: string): Promise<void> {
     const entries = await fs.readdir(dir, { withFileTypes: true });
@@ -57,12 +83,13 @@ async function collectMediaFiles(
         const ext = path.extname(entry.name).toLowerCase().slice(1);
         if (VIDEO_EXTENSIONS.has(ext)) videos.push(full);
         else if (IMAGE_EXTENSIONS.has(ext)) images.push(full);
+        else if (AUDIO_ONLY_EXTENSIONS.has(ext)) audio.push(full);
       }
     }
   }
 
   await walk(dirPath);
-  return { videos, images };
+  return { videos, images, audio };
 }
 
 async function prepareCopiedWorkingPaths(
@@ -143,6 +170,19 @@ async function processMediaFile(
     if (await verifyFixed()) {
       logFixed(`Fixed · ${baseName}`);
       return 'fixed';
+    }
+    // No embedded date anywhere (screenshots, downloaded media, recordings):
+    // fall back to writing the oldest filesystem date into the embedded tags.
+    try {
+      if (
+        (await fixDatesFromFilesystemFallback(file)) &&
+        (await verifyFixed())
+      ) {
+        logFixed(`Fixed (filesystem date) · ${baseName}`);
+        return 'fixed';
+      }
+    } catch {
+      // Fall through to the failure report below.
     }
     output.warn(`Failed · ${baseName} · no valid source date found`);
     return 'failed';
@@ -336,20 +376,23 @@ export const fixDates = new Command()
 
         const videos: string[] = [];
         const images: string[] = [];
+        const audio: string[] = [];
 
         for (const entry of working.paths) {
           if (entry.stat?.isDirectory()) {
             const collected = await collectMediaFiles(entry.path);
             videos.push(...collected.videos);
             images.push(...collected.images);
+            audio.push(...collected.audio);
           } else if (entry.stat?.isFile()) {
             const ext = path.extname(entry.path).toLowerCase().slice(1);
             if (VIDEO_EXTENSIONS.has(ext)) videos.push(entry.path);
             else if (IMAGE_EXTENSIONS.has(ext)) images.push(entry.path);
+            else if (AUDIO_ONLY_EXTENSIONS.has(ext)) audio.push(entry.path);
           }
         }
 
-        const totalFiles = videos.length + images.length;
+        const totalFiles = videos.length + images.length + audio.length;
         if (totalFiles === 0) {
           output.error('No media files found.', 'no_media_files');
           process.exit(1);
@@ -357,7 +400,7 @@ export const fixDates = new Command()
 
         if (output.jsonl) {
           output.log(
-            `Fixing ${totalFiles} file(s) (${videos.length} video(s), ${images.length} photo(s))`,
+            `Fixing ${totalFiles} file(s) (${videos.length} video(s), ${images.length} photo(s), ${audio.length} audio)`,
           );
         } else {
           output.blankLine();
@@ -381,7 +424,7 @@ export const fixDates = new Command()
           output.blankLine();
           output.info('Files');
           output.indentedMuted(
-            `${totalFiles} total (${videos.length} video(s), ${images.length} photo(s))`,
+            `${totalFiles} total (${videos.length} video(s), ${images.length} photo(s), ${audio.length} audio)`,
           );
           output.blankLine();
         }
@@ -429,6 +472,28 @@ export const fixDates = new Command()
               logFixed,
             ),
           );
+        }
+
+        // Audio-only formats: exiftool cannot write embedded dates, so only
+        // filesystem dates can be restored.
+        for (const file of audio) {
+          const baseName = path.basename(file);
+          try {
+            if (await fixFilesystemDatesOnly(file)) {
+              logFixed(`Fixed (filesystem only) · ${baseName}`);
+              fixed++;
+            } else {
+              output.warn(`Failed · ${baseName} · no usable filesystem date`);
+              failed++;
+            }
+          } catch (err) {
+            output.warn(
+              `Failed · ${baseName} · ${
+                err instanceof Error ? err.message : String(err)
+              }`,
+            );
+            failed++;
+          }
         }
 
         output.blankLine();
