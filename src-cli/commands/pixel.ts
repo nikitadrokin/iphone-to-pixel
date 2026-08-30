@@ -173,7 +173,7 @@ const deleteCmd = new Command('delete')
     }
 
     output.success(
-      `Deleted ${String(paths.length)} file${paths.length === 1 ? '' : 's'} from the device`,
+      `Deleted ${String(paths.length)} file${paths.length === 1 ? '' : 's'}`,
     );
   });
 
