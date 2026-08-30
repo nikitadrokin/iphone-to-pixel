@@ -169,6 +169,14 @@ export interface PixelPurgeEvent {
   readonly deleted: number;
 }
 
+/** Result of `pb pixel delete --jsonl`. */
+export interface PixelDeleteEvent {
+  readonly v: 1;
+  readonly kind: 'pixel_delete';
+  readonly deleted: number;
+  readonly paths: readonly string[];
+}
+
 export type EventV1 =
   | SessionEvent
   | FileEvent
@@ -181,7 +189,8 @@ export type EventV1 =
   | ShellStorageEvent
   | GalleryScanEvent
   | PixelListEvent
-  | PixelPurgeEvent;
+  | PixelPurgeEvent
+  | PixelDeleteEvent;
 
 /** Legacy stdout lines from `logger` before structured events. */
 export interface Log {
@@ -263,6 +272,10 @@ function isCliUiEventV1(parsed: unknown): parsed is EventV1 {
     case 'pixel_purge':
       return (
         typeof parsed.dir === 'string' && typeof parsed.deleted === 'number'
+      );
+    case 'pixel_delete':
+      return (
+        typeof parsed.deleted === 'number' && Array.isArray(parsed.paths)
       );
     default:
       return false;

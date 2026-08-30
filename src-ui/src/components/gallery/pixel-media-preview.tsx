@@ -6,6 +6,7 @@ import {
   IconDownload,
   IconLoader2,
   IconMovie,
+  IconTrash,
 } from '@tabler/icons-react';
 import { Button } from '@/components/ui/button';
 import { VIDEO_EXTENSIONS } from '@/lib/constants';
@@ -21,6 +22,8 @@ interface PixelMediaPreviewProps {
   readonly localPath: string | null;
   readonly errorDetail?: string | null;
   readonly onSave?: () => void;
+  readonly onDelete?: () => void;
+  readonly deleteDisabled?: boolean;
   readonly onExpand?: () => void;
   readonly mediaClassName?: string;
 }
@@ -31,6 +34,8 @@ const PixelMediaPreview: React.FC<PixelMediaPreviewProps> = ({
   localPath,
   errorDetail,
   onSave,
+  onDelete,
+  deleteDisabled,
   onExpand,
   mediaClassName,
 }) => {
@@ -92,6 +97,19 @@ const PixelMediaPreview: React.FC<PixelMediaPreviewProps> = ({
           <IconDownload size={16} />
           Save to…
         </Button>
+        {onDelete ? (
+          <Button
+            type="button"
+            variant="destructive"
+            size="sm"
+            className="gap-2"
+            disabled={deleteDisabled}
+            onClick={onDelete}
+          >
+            <IconTrash size={16} />
+            Delete from device
+          </Button>
+        ) : null}
         {onExpand ? (
           <Button
             type="button"

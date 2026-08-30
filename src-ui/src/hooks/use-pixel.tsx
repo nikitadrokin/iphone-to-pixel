@@ -529,6 +529,44 @@ function usePixelProviderValue() {
     return { ok: false, detail: errorDetail ?? 'Purge did not complete.' };
   }, [isConnected, captureStdout]);
 
+  /** Deletes specific device file paths from the Pixel. */
+  const deletePixelFiles = useCallback(
+    async (
+      paths: string[],
+    ): Promise<{ ok: true; deleted: number } | { ok: false; detail: string }> => {
+      if (!isConnected) {
+        return { ok: false, detail: 'No device connected.' };
+      }
+      if (paths.length === 0) {
+        return { ok: false, detail: 'No files selected.' };
+      }
+      const { stdout } = await captureStdout([
+        'pixel',
+        'delete',
+        ...paths,
+        '--jsonl',
+      ]);
+      const lines = stdout
+        .split('\n')
+        .map((line) => line.replace(/\r$/, '').trim())
+        .filter((line) => line.length > 0);
+
+      let errorDetail: string | null = null;
+      for (const line of lines) {
+        const parsed = parseLineFromCLI(line);
+        if (parsed.tag !== 'ui') continue;
+        if (parsed.event.kind === 'pixel_delete') {
+          return { ok: true, deleted: parsed.event.deleted };
+        }
+        if (parsed.event.kind === 'error') {
+          errorDetail = parsed.event.detail ?? parsed.event.code;
+        }
+      }
+      return { ok: false, detail: errorDetail ?? 'Delete did not complete.' };
+    },
+    [isConnected, captureStdout],
+  );
+
   const openSidecarInTerminal = useCallback(
     async (args: Array<string>) => {
       await openInTerminal({ command: 'pb', args });
@@ -763,6 +801,7 @@ function usePixelProviderValue() {
     pullPixelFileToCache,
     savePixelFiles,
     purgePixelFiles,
+    deletePixelFiles,
     isRunning,
     logs,
     activityEvents,

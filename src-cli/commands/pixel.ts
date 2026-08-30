@@ -138,6 +138,45 @@ const purgeCmd = new Command('purge')
     );
   });
 
+const deleteCmd = new Command('delete')
+  .description('delete specific files from the connected Pixel')
+  .argument('<paths...>', 'device file paths to delete')
+  .option('--jsonl', 'emit the result as a JSONL UI event on stdout')
+  .action(async (paths: string[], opts: { jsonl?: boolean }) => {
+    const output = createCliOutput(Boolean(opts.jsonl));
+
+    // Plain `rm` (no -f) so a missing path surfaces as an adb error instead
+    // of being silently reported as deleted.
+    const rmResult = await execa(
+      resolveTool('adb'),
+      ['shell', `rm ${paths.map(shellQuote).join(' ')}`],
+      { stdin: 'ignore', stdout: 'pipe', stderr: 'pipe', reject: false },
+    );
+
+    if (rmResult.exitCode !== 0) {
+      const errText =
+        rmResult.stderr.trim().length > 0
+          ? rmResult.stderr.trim()
+          : `adb shell exited with code ${String(rmResult.exitCode)}`;
+      output.error(errText, 'adb_shell_error');
+      process.exit(rmResult.exitCode ?? 1);
+    }
+
+    if (opts.jsonl) {
+      output.event({
+        v: 1,
+        kind: 'pixel_delete',
+        deleted: paths.length,
+        paths,
+      });
+      return;
+    }
+
+    output.success(
+      `Deleted ${String(paths.length)} file${paths.length === 1 ? '' : 's'} from the device`,
+    );
+  });
+
 /** Recursively collects file paths under a device directory. */
 async function walkRemoteDir(sync: any, dir: string): Promise<string[]> {
   const files: string[] = [];
@@ -249,4 +288,5 @@ export const pixel = new Command('pixel')
   .description('inspect and manage the connected Pixel camera roll')
   .addCommand(listCmd)
   .addCommand(pullCmd)
+  .addCommand(deleteCmd)
   .addCommand(purgeCmd);

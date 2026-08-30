@@ -68,6 +68,7 @@ function PixelPage() {
     pullPixelFileToCache,
     savePixelFiles,
     purgePixelFiles,
+    deletePixelFiles,
     refreshDeviceInfo,
   } = pixel;
 
@@ -84,6 +85,8 @@ function PixelPage() {
   const [purgeDialogOpen, setPurgeDialogOpen] = useState(false);
   const [purgeConfirmText, setPurgeConfirmText] = useState('');
   const [isPurging, setIsPurging] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   // Guards against an earlier pull resolving after a newer selection.
   const previewRequestRef = useRef(0);
 
@@ -113,6 +116,7 @@ function PixelPage() {
       setDialogOpen(false);
       setPurgeDialogOpen(false);
       setPurgeConfirmText('');
+      setDeleteDialogOpen(false);
     }
   }, [isConnected, loadFiles, refreshDeviceInfo]);
 
@@ -168,6 +172,36 @@ function PixelPage() {
     ]).execute();
     toast.success('Local cache purged');
   }, []);
+
+  // Deleting mid-transfer could remove files adb is still writing.
+  const canDelete =
+    isConnected && !pixel.isRunning && !isDeleting && selectedFile !== null;
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!selectedFile || !isConnected || pixel.isRunning || isDeleting) return;
+    setIsDeleting(true);
+    const result = await deletePixelFiles([selectedFile.path]);
+    setIsDeleting(false);
+    setDeleteDialogOpen(false);
+    if (result.ok) {
+      toast.success(`Deleted ${selectedFile.name} from the device`);
+      setSelectedFile(null);
+      setPreview(null);
+      setDialogOpen(false);
+    } else {
+      toast.error('Delete failed', { description: result.detail });
+    }
+    void loadFiles();
+    void refreshDeviceInfo();
+  }, [
+    selectedFile,
+    isConnected,
+    pixel.isRunning,
+    isDeleting,
+    deletePixelFiles,
+    loadFiles,
+    refreshDeviceInfo,
+  ]);
 
   const fileCount = files?.length ?? 0;
   const purgeConfirmed =
@@ -225,12 +259,52 @@ function PixelPage() {
                 localPath={preview.localPath}
                 errorDetail={preview.detail}
                 onSave={handleSave}
+                onDelete={() => setDeleteDialogOpen(true)}
+                deleteDisabled={!canDelete}
                 mediaClassName="max-h-[70vh]"
               />
             </>
           ) : null}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          if (isDeleting) return;
+          setDeleteDialogOpen(open);
+        }}
+      >
+        <AlertDialogContent size="default">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete from device?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This deletes{' '}
+              <span className="font-mono">{selectedFile?.path}</span> from the
+              device. Deleted files cannot be recovered.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={!canDelete}
+              onClick={() => {
+                void handleConfirmDelete();
+              }}
+            >
+              {isDeleting ? (
+                <>
+                  <IconLoader2 size={16} className="animate-spin" />
+                  Deleting…
+                </>
+              ) : (
+                'Delete file'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         open={purgeDialogOpen}
@@ -446,6 +520,8 @@ function PixelPage() {
               localPath={preview.localPath}
               errorDetail={preview.detail}
               onSave={handleSave}
+              onDelete={() => setDeleteDialogOpen(true)}
+              deleteDisabled={!canDelete}
               mediaClassName="flex-1 @min-[64rem]/split:max-h-[calc(100vh-12rem)]"
             />
           </>
