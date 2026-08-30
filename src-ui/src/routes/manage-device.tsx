@@ -184,7 +184,6 @@ function PixelPage() {
     setIsDeleting(false);
     setDeleteDialogOpen(false);
     if (result.ok) {
-      toast.success(`Deleted ${selectedFile.name} from the device`);
       setSelectedFile(null);
       setPreview(null);
       setDialogOpen(false);
