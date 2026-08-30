@@ -56,16 +56,18 @@ const MediaPreview: React.FC<MediaPreviewProps> = ({
       if (result.code !== 0) {
         throw new Error(result.stderr.trim() || `Exit code ${result.code}`);
       }
-      toast.success(`Moved “${file.basename}” to Trash`);
       onTrashed?.(file.path);
       setConfirmTrash(false);
     } catch (error) {
-      toast.error('Could not move file to Trash', {
-        description:
-          error instanceof Error
-            ? `${error.message} — is the \`trash\` CLI installed? (brew install trash)`
-            : 'Is the `trash` CLI installed? (brew install trash)',
-      });
+      toast.error(
+        'Could not move file to Trash',
+        // {
+        // description:
+        //   error instanceof Error
+        //     ? `${error.message} — is the \`trash\` CLI installed? (brew install trash)`
+        //     : 'Is the `trash` CLI installed? (brew install trash)',
+        //   }
+      );
     } finally {
       setIsTrashing(false);
     }
@@ -145,8 +147,8 @@ const MediaPreview: React.FC<MediaPreviewProps> = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Move to Trash?</AlertDialogTitle>
             <AlertDialogDescription>
-              “{file.basename}” will be moved to the macOS Trash. You can recover
-              it from there.
+              “{file.basename}” will be moved to the macOS Trash. You can
+              recover it from there.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
